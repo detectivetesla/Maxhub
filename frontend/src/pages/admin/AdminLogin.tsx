@@ -70,7 +70,7 @@ const AdminLogin: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="bg-white/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[3rem] p-12 backdrop-blur-xl shadow-2xl relative overflow-hidden group transition-colors duration-500">
+                <div className="bg-white/95 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[2.5rem] sm:rounded-[3rem] p-8 sm:p-12 backdrop-blur-xl shadow-2xl relative overflow-hidden group transition-colors duration-500">
                     {/* Header */}
                     <div className="mb-10 text-center relative z-10">
                         <div className="w-20 h-20 rounded-[2rem] bg-slate-900 dark:bg-slate-900 border border-slate-200 dark:border-white/5 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 group-hover:scale-110 transition-transform duration-700">
@@ -99,7 +99,7 @@ const AdminLogin: React.FC = () => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="admin@system.com"
-                                    className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-16 pr-6 outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-white placeholder:text-slate-700"
+                                    className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl py-4 sm:py-5 pl-14 sm:pl-16 pr-6 outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 shadow-sm"
                                 />
                             </div>
                         </div>
@@ -117,7 +117,7 @@ const AdminLogin: React.FC = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••••••"
-                                    className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-16 pr-16 outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-white placeholder:text-slate-700"
+                                    className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl py-4 sm:py-5 pl-14 sm:pl-16 pr-14 sm:pr-16 outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 shadow-sm"
                                 />
                                 <button
                                     type="button"

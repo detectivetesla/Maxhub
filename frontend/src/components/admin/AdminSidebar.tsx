@@ -11,25 +11,27 @@ import { useAuth } from '@/context/AuthContext';
 
 interface AdminSidebarProps {
     className?: string;
+    isCollapsed?: boolean;
 }
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) => {
     const { logout } = useAuth();
 
     const sections = [
         {
             title: 'General',
             items: [
-                { icon: LayoutGrid, label: 'Overview', path: '/admin', color: 'text-primary', end: true },
+                { icon: LayoutGrid, label: 'Dashboard', path: '/admin', color: 'text-[#2ECC71]', end: true },
                 { icon: BarChart2, label: 'Analytics', path: '/admin/analytics', color: 'text-indigo-500' },
             ]
         },
         {
             title: 'Management',
             items: [
-                { icon: Users, label: 'Manage Users', path: '/admin/users', color: 'text-blue-500' },
-                { icon: ShoppingBag, label: 'Manage Orders', path: '/admin/orders', color: 'text-orange-500' },
+                { icon: Users, label: 'Users', path: '/admin/users', color: 'text-blue-500' },
+                { icon: ShoppingBag, label: 'Orders', path: '/admin/orders', color: 'text-orange-500' },
                 { icon: Database, label: 'Data Plans', path: '/admin/bundles', color: 'text-emerald-500' },
+                { icon: Users, label: 'Resellers/Agents', path: '/admin/agents', color: 'text-blue-400' },
             ]
         },
         {
@@ -57,17 +59,23 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
     ];
 
     return (
-        <aside className={cn("w-72 bg-white dark:bg-[#0B0F19] border-r border-slate-100 dark:border-white/5 flex flex-col fixed inset-y-0 z-[70]", className)}>
+        <aside className={cn(
+            "bg-white dark:bg-[#0B0F19] border-r border-slate-100 dark:border-white/5 flex flex-col fixed inset-y-0 z-[70] transition-all duration-300",
+            isCollapsed ? "w-24" : "w-72",
+            className
+        )}>
             {/* Branding Section */}
-            <div className="p-8 pb-4">
+            <div className={cn("p-8 pb-4 transition-all", isCollapsed && "p-6 flex justify-center")}>
                 <Link to="/admin" className="flex items-center gap-3 group">
                     <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shadow-2xl shadow-black/20 group-hover:scale-110 transition-transform">
-                        <Shield className="w-6 h-6 text-primary" />
+                        <Shield className="w-6 h-6 text-[#2ECC71]" />
                     </div>
-                    <div className="flex flex-col">
-                        <span className="text-xl font-black text-slate-900 dark:text-white leading-none">Admin.</span>
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1">Control Panel</span>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="flex flex-col">
+                            <span className="text-xl font-black text-slate-900 dark:text-white leading-none">Super Admin</span>
+                            <span className="text-[10px] font-black text-[#2ECC71] uppercase tracking-[0.2em] mt-1">Control Panel</span>
+                        </div>
+                    )}
                 </Link>
             </div>
 
@@ -75,33 +83,38 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
             <nav className="flex-1 px-4 py-4 space-y-8 overflow-y-auto custom-scrollbar">
                 {sections.map((section) => (
                     <div key={section.title} className="space-y-1">
-                        <div className="px-6 py-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] opacity-50">
-                            {section.title}
-                        </div>
+                        {!isCollapsed && (
+                            <div className="px-6 py-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] opacity-50">
+                                {section.title}
+                            </div>
+                        )}
                         {section.items.map((item) => (
                             <NavLink
                                 key={item.path}
                                 to={item.path}
                                 end={(item as any).end}
+                                title={isCollapsed ? item.label : undefined}
                                 className={({ isActive }) => cn(
-                                    "flex items-center gap-4 px-6 py-3 rounded-2xl transition-all duration-300 group",
+                                    "flex items-center rounded-2xl transition-all duration-300 group relative",
+                                    isCollapsed ? "justify-center p-3 mb-2" : "gap-4 px-6 py-3",
                                     isActive
-                                        ? "bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white shadow-sm border border-slate-100 dark:border-white/10"
+                                        ? "bg-[#2ECC71]/10 text-[#2ECC71] font-black shadow-sm border border-[#2ECC71]/10"
                                         : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                                 )}
                             >
                                 {({ isActive: isItemActive }) => (
                                     <>
                                         <div className={cn(
-                                            "p-2 rounded-xl transition-all group-hover:scale-110",
+                                            "rounded-xl transition-all group-hover:scale-110 shrink-0",
+                                            isCollapsed ? "p-3" : "p-2 bg-current/10",
                                             item.color,
-                                            "bg-current/10"
+                                            isCollapsed && isItemActive && "bg-[#2ECC71]/10 shadow-lg shadow-[#2ECC71]/20"
                                         )}>
-                                            <item.icon className="w-4 h-4" />
+                                            <item.icon className={isCollapsed ? "w-6 h-6" : "w-4 h-4"} />
                                         </div>
-                                        <span className="text-sm font-bold tracking-tight">{item.label}</span>
-                                        {isItemActive && (
-                                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+                                        {!isCollapsed && <span className="text-sm font-bold tracking-tight">{item.label}</span>}
+                                        {isItemActive && !isCollapsed && (
+                                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#2ECC71] shadow-[0_0_8px_rgba(46,204,113,0.5)]" />
                                         )}
                                     </>
                                 )}
@@ -112,21 +125,29 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
             </nav>
 
             {/* Bottom Utility Section */}
-            <div className="p-8 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
+            <div className={cn("p-8 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4", isCollapsed && "p-6 flex flex-col items-center")}>
                 <Link
                     to="/dashboard"
-                    className="flex items-center gap-3 px-6 py-3 rounded-2xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-all font-black text-xs uppercase tracking-widest"
+                    title={isCollapsed ? "User Dashboard" : undefined}
+                    className={cn(
+                        "flex items-center rounded-2xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-all font-black text-xs uppercase tracking-widest",
+                        isCollapsed ? "p-3 justify-center" : "gap-3 px-6 py-3"
+                    )}
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    <span>User Dashboard</span>
+                    {!isCollapsed && <span>User Dashboard</span>}
                 </Link>
 
                 <button
                     onClick={logout}
-                    className="w-full flex items-center gap-3 px-6 py-3 rounded-2xl text-red-500 hover:bg-red-500/5 transition-all font-black text-xs uppercase tracking-widest"
+                    title={isCollapsed ? "Logout" : undefined}
+                    className={cn(
+                        "flex items-center rounded-2xl text-red-500 hover:bg-red-500/5 transition-all font-black text-xs uppercase tracking-widest",
+                        isCollapsed ? "p-3 justify-center" : "w-full gap-3 px-6 py-3"
+                    )}
                 >
                     <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
+                    {!isCollapsed && <span>Logout</span>}
                 </button>
             </div>
         </aside>

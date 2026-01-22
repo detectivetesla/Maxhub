@@ -6,6 +6,7 @@ import AdminHeader from './AdminHeader';
 
 const AdminLayout: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+    const [isCollapsed, setIsCollapsed] = React.useState(false);
 
     return (
         <div
@@ -30,16 +31,29 @@ const AdminLayout: React.FC = () => {
                 </div>
 
                 <AdminSidebar
+                    isCollapsed={isCollapsed}
                     className={cn(
-                        "lg:translate-x-0 transition-transform duration-300",
-                        isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                        "lg:translate-x-0 transition-all duration-300",
+                        isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+                        isCollapsed ? "lg:w-24" : "lg:w-72"
                     )}
                 />
 
-                <main className="flex-1 lg:ml-72 flex flex-col min-w-0 relative z-10">
-                    <AdminHeader onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+                <main className={cn(
+                    "flex-1 flex flex-col min-w-0 relative z-10 transition-all duration-300",
+                    isCollapsed ? "lg:ml-24" : "lg:ml-72"
+                )}>
+                    <AdminHeader
+                        onMenuClick={() => {
+                            if (window.innerWidth >= 1024) {
+                                setIsCollapsed(!isCollapsed);
+                            } else {
+                                setIsSidebarOpen(!isSidebarOpen);
+                            }
+                        }}
+                    />
 
-                    <div className="p-4 sm:p-8 lg:p-12 overflow-y-auto">
+                    <div className="p-4 sm:p-8 lg:p-10 overflow-y-auto">
                         <div className="max-w-[1600px] mx-auto w-full">
                             <Outlet />
                         </div>

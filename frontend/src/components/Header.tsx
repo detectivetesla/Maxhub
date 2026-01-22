@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Settings, Mail, User, Command, PanelLeft, Menu, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/utils/cn';
@@ -16,6 +17,7 @@ const Header: React.FC<HeaderProps> = ({
     onToggleMobileMenu
 }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     return (
         <header className="w-full flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 py-2 sm:py-4 px-1 sm:px-2 mb-4 md:mb-6">
@@ -86,12 +88,15 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="h-8 w-[1px] bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block" />
 
                 {/* User Profile */}
-                <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 group cursor-pointer">
+                <div
+                    onClick={() => navigate('/dashboard/settings')}
+                    className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 group cursor-pointer"
+                >
                     <div className="flex flex-col items-end hidden xs:flex">
                         <span className="text-[10px] font-black text-primary uppercase tracking-tighter leading-none mb-0.5">{user?.role || 'Customer'}</span>
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{user?.fullName?.split(' ')[0]}</span>
                     </div>
-                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-slate-900 border-2 border-white dark:border-white/10 shadow-lg overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-slate-900 border-2 border-white dark:border-white/10 shadow-lg overflow-hidden shrink-0 group-hover:scale-105 transition-all active:scale-95">
                         <img
                             src={`https://ui-avatars.com/api/?name=${user?.fullName || 'User'}&background=random`}
                             alt="Avatar"
