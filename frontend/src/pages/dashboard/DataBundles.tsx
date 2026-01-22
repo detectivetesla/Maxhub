@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Wallet, Grid3x3, List, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Wallet, Grid3x3, List, CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/utils/cn';
 import Button from '@/components/Button';
@@ -27,17 +28,18 @@ const DataBundles: React.FC = () => {
     const [selectedBundle, setSelectedBundle] = useState<Bundle | null>(null);
     const [mode, setMode] = useState<PurchaseMode>('grid');
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState<'wallet'>('wallet');
+    const [paymentMethod, _] = useState<'wallet'>('wallet');
     const [allBundles, setAllBundles] = useState<Bundle[]>([]);
     const [loading, setLoading] = useState(true);
+    const [processing, setProcessing] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     React.useEffect(() => {
         const fetchBundles = async () => {
             try {
-                const response = await fetch('http://localhost:5000/admin/bundles');
-                const data = await response.json();
+                const response = await axios.get('http://localhost:5000/admin/bundles');
                 // Map API price_ghc to price field
-                const formattedBundles = data.bundles.map((b: any) => ({
+                const formattedBundles = response.data.bundles.map((b: any) => ({
                     ...b,
                     price: Number(b.price_ghc),
                     data: b.data_amount,
@@ -97,9 +99,33 @@ const DataBundles: React.FC = () => {
         setCurrentStep(3);
     };
 
-    const handlePayment = () => {
-        // Payment logic here
-        console.log('Processing payment', { selectedBundle, phoneNumber, paymentMethod });
+    const handlePayment = async () => {
+        if (!selectedBundle || !phoneNumber) return;
+
+        setProcessing(true);
+        setMessage(null);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post('http://localhost:5000/dashboard/purchase', {
+                bundleId: selectedBundle.id,
+                phone: phoneNumber
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setMessage({ type: 'success', text: response.data.message });
+            setTimeout(() => {
+                resetFlow();
+            }, 3000);
+        } catch (error: any) {
+            setMessage({
+                type: 'error',
+                text: error.response?.data?.message || 'Payment failed. Please try again.'
+            });
+        } finally {
+            setProcessing(false);
+        }
     };
 
     const resetFlow = () => {
@@ -107,6 +133,7 @@ const DataBundles: React.FC = () => {
         setSelectedNetwork(null);
         setSelectedBundle(null);
         setPhoneNumber('');
+        setMessage(null);
     };
 
     // Step Indicator Component
@@ -357,12 +384,23 @@ const DataBundles: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => setCurrentStep(2)}
-                        className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                        disabled={processing}
+                        className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <h2 className="text-2xl font-black text-black dark:text-white">Complete Purchase</h2>
                 </div>
+
+                {message && (
+                    <div className={cn(
+                        "p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2",
+                        message.type === 'success' ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" : "bg-red-500/10 text-red-600 border border-red-500/20"
+                    )}>
+                        {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                        <p className="font-bold text-sm">{message.text}</p>
+                    </div>
+                )}
 
                 {/* Bundle Summary */}
                 <div className="p-6 rounded-2xl bg-white dark:bg-white/[0.02] border-2 border-slate-200 dark:border-white/10">
@@ -399,7 +437,8 @@ const DataBundles: React.FC = () => {
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}
                             placeholder="024 123 4567"
-                            className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all text-black dark:text-white"
+                            disabled={processing}
+                            className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all text-black dark:text-white disabled:opacity-50"
                         />
                     </div>
                 </div>
@@ -410,18 +449,10 @@ const DataBundles: React.FC = () => {
                         Payment Method
                     </h3>
                     <div className="space-y-3">
-                        <button
-                            onClick={() => setPaymentMethod('wallet')}
-                            className={cn(
-                                'w-full p-4 rounded-xl border-2 transition-all text-left',
-                                paymentMethod === 'wallet'
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-slate-200 dark:border-white/10 hover:border-primary/50'
-                            )}
-                        >
+                        <div className="w-full p-4 rounded-xl border-2 border-primary bg-primary/5 transition-all text-left">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <Wallet className={cn('w-5 h-5', paymentMethod === 'wallet' ? 'text-primary' : 'text-slate-400')} />
+                                    <Wallet className="w-5 h-5 text-primary" />
                                     <div>
                                         <p className="font-black text-black dark:text-white">Wallet Balance</p>
                                         <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
@@ -429,23 +460,26 @@ const DataBundles: React.FC = () => {
                                         </p>
                                     </div>
                                 </div>
-                                {paymentMethod === 'wallet' && (
-                                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                                )}
+                                <CheckCircle2 className="w-5 h-5 text-primary" />
                             </div>
-                        </button>
-
-
+                        </div>
                     </div>
                 </div>
 
                 {/* Purchase Button */}
                 <Button
                     onClick={handlePayment}
-                    disabled={!phoneNumber}
-                    className="w-full py-4 text-lg font-black rounded-2xl"
+                    disabled={!phoneNumber || processing}
+                    className="w-full py-4 text-lg font-black rounded-2xl flex items-center justify-center gap-2"
                 >
-                    Complete Purchase - GH₵ {selectedBundle.price.toFixed(2)}
+                    {processing ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Processing...</span>
+                        </>
+                    ) : (
+                        <span>Complete Purchase - GH₵ {selectedBundle.price.toFixed(2)}</span>
+                    )}
                 </Button>
 
                 <p className="text-center text-sm text-slate-500 dark:text-slate-400 font-medium">

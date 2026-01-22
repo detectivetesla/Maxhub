@@ -4,6 +4,7 @@ import { Mail, Lock, User, Eye, EyeOff, Check, Globe, LayoutGrid, Phone } from '
 import Button from '@/components/Button';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/context/AuthContext';
+import api from '@/utils/api';
 
 interface AuthPageProps {
     type: 'signin' | 'signup';
@@ -22,12 +23,13 @@ const GoogleIcon = () => (
 
 
 const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
-    const { login } = useAuth();
+    const { login, register } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -42,28 +44,31 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
         e.preventDefault();
         setLoading(true);
         setSuccessMsg('');
+        setErrorMsg('');
 
-        // Simulate API call
-        setTimeout(() => {
-            setLoading(false);
+        try {
             if (type === 'signup') {
+                await register({
+                    email: formData.email,
+                    password: formData.password,
+                    fullName: `${formData.firstName} ${formData.lastName}`,
+                    phoneNumber: `${countryCode}${formData.phoneNumber}`
+                });
                 setSuccessMsg('Account created! Please login to continue.');
                 setTimeout(() => onToggle(), 2000);
             } else {
-                login({
-                    token: 'mock-jwt-token',
-                    user: {
-                        id: '1',
-                        email: formData.email,
-                        fullName: formData.firstName && formData.lastName
-                            ? `${formData.firstName} ${formData.lastName}`
-                            : 'User Name',
-                        walletBalance: 0,
-                        role: 'customer'
-                    }
+                const response = await api.post('/auth/login', {
+                    email: formData.email,
+                    password: formData.password
                 });
+                login(response.data);
+                navigate('/dashboard');
             }
-        }, 1500);
+        } catch (err: any) {
+            setErrorMsg(err.response?.data?.message || 'An error occurred. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -113,6 +118,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
                     {successMsg && (
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] bg-emerald-500/10 border border-emerald-500/20 py-2 sm:py-3 rounded-xl text-center text-xs font-bold text-emerald-400 px-4 animate-in slide-in-from-top-2">
                             {successMsg}
+                        </div>
+                    )}
+
+                    {errorMsg && (
+                        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] bg-red-500/10 border border-red-500/20 py-2 sm:py-3 rounded-xl text-center text-xs font-bold text-red-400 px-4 animate-in slide-in-from-top-2">
+                            {errorMsg}
                         </div>
                     )}
 

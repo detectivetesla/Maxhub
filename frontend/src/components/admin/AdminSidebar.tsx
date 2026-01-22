@@ -31,7 +31,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
                 { icon: Users, label: 'Users', path: '/admin/users', color: 'text-blue-500' },
                 { icon: ShoppingBag, label: 'Orders', path: '/admin/orders', color: 'text-orange-500' },
                 { icon: Database, label: 'Data Plans', path: '/admin/bundles', color: 'text-emerald-500' },
-                { icon: Users, label: 'Resellers/Agents', path: '/admin/agents', color: 'text-blue-400' },
             ]
         },
         {

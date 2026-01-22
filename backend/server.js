@@ -17,12 +17,12 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-const webhookRoutes = require('./routes/webhooks');
-const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const dashboardRoutes = require('./routes/dashboard');
 app.use('/webhooks', webhookRoutes);
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'DataSwap Backend is running' });

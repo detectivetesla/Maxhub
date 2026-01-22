@@ -8,9 +8,13 @@ import {
 import { cn } from '@/utils/cn';
 import { useTheme } from '@/context/ThemeContext';
 
+import { useAuth } from '@/context/AuthContext';
+import api from '@/utils/api';
+
 const AdminLogin: React.FC = () => {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -22,17 +26,23 @@ const AdminLogin: React.FC = () => {
         setError('');
         setIsLoading(true);
 
-        // Simulating login process
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            // For now, any non-empty credentials "log in"
-            if (email && password) {
-                navigate('/admin');
-            } else {
-                setError('Please provide valid administrative credentials.');
+            const response = await api.post('/auth/login', {
+                email,
+                password
+            });
+
+            const { user } = response.data;
+
+            if (user.role !== 'admin') {
+                setError('Access denied. This terminal is for authorized personnel only.');
+                return;
             }
-        } catch (err) {
-            setError('Authentication failed. Please check your connection.');
+
+            login(response.data);
+            navigate('/admin');
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Authentication failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

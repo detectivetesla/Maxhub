@@ -9,26 +9,21 @@ import AdminBundlesPage from '@/pages/admin/AdminBundlesPage';
 import AdminAPIPage from '@/pages/admin/AdminAPIPage';
 import AdminLogsPage from '@/pages/admin/AdminLogsPage';
 import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
+import AdminOrdersPage from '@/pages/admin/AdminOrdersPage';
 import AdminLogin from '@/pages/admin/AdminLogin';
 import TermsPage from '@/pages/TermsPage';
 import PrivacyPage from '@/pages/PrivacyPage';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import AdminLayout from '@/components/admin/AdminLayout';
-
-const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
-    const { user, isAuthenticated } = useAuth();
-
-    if (!isAuthenticated) return <Navigate to="/login" />;
-    if (adminOnly && user?.role !== 'admin') return <Navigate to="/dashboard" />;
-
-    return <>{children}</>;
-};
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const AuthWrapper: React.FC<{ type: 'signin' | 'signup' }> = ({ type }) => {
     const [currentType, setCurrentType] = React.useState(type);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
 
-    if (isAuthenticated) return <Navigate to="/dashboard" />;
+    if (isAuthenticated) {
+        return <Navigate to={user?.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+    }
 
     return <AuthPage type={currentType} onToggle={() => setCurrentType(currentType === 'signin' ? 'signup' : 'signin')} />;
 };
@@ -62,7 +57,7 @@ const AppRoutes: React.FC = () => {
             </Route>
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout />
                 </ProtectedRoute>
             }>
@@ -70,7 +65,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="analytics" element={<div className="p-8"><h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">System Analytics</h1><p className="text-slate-500 font-bold mt-1">Deep-dive traffic and revenue metrics.</p></div>} />
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="bundles" element={<AdminBundlesPage />} />
-                <Route path="orders" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Manage Orders</h1><p className="text-slate-500">Scheduled for Phase 2 Integration.</p></div>} />
+                <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="transactions" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transactions</h1><p className="text-slate-500">Financial Ledger Processing.</p></div>} />
                 <Route path="discounts" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Discounts</h1><p className="text-slate-500">Coupon and Reward Generation.</p></div>} />
                 <Route path="networks" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Networks</h1><p className="text-slate-500">Provider Core Configuration.</p></div>} />

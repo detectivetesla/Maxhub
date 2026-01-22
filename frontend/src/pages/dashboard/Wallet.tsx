@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, CreditCard, Landmark, Download } from 'lucide-react';
+import axios from 'axios';
 import { cn } from '@/utils/cn';
 import Button from '@/components/Button';
 import { useAuth } from '@/context/AuthContext';
 
 const Wallet: React.FC = () => {
     const { user } = useAuth();
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get('http://localhost:5000/dashboard/transactions', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setTransactions(response.data.transactions);
+            } catch (error) {
+                console.error('Failed to fetch transactions', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTransactions();
+    }, []);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
@@ -28,7 +49,7 @@ const Wallet: React.FC = () => {
                                 <p className="text-slate-400 dark:text-slate-500 font-bold text-xs uppercase tracking-widest">Live Balance</p>
                             </div>
                             <h2 className="text-7xl font-black text-white mt-1 tracking-tight drop-shadow-md">
-                                GH₵ 125.50
+                                GH₵ {user?.walletBalance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                             </h2>
                             <p className="text-slate-400 mt-4 font-medium flex items-center gap-2">
                                 <span className="opacity-60 italic text-sm">Account Name:</span>
@@ -97,30 +118,32 @@ const Wallet: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
-                            {[{ id: 1, status: 'Success', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-                            { id: 2, status: 'Processing', color: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20' },
-                            { id: 3, status: 'Failed', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
-                            { id: 4, status: 'Success', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-                            { id: 5, status: 'Success', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' }].map((item) => (
+                            {loading ? (
+                                [1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 dark:bg-white/5 rounded-2xl animate-pulse" />)
+                            ) : transactions.length === 0 ? (
+                                <p className="text-center text-xs text-slate-400 font-bold py-8">No transactions found.</p>
+                            ) : transactions.slice(0, 5).map((item) => (
                                 <div key={item.id} className="flex items-center justify-between p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none transition-all hover:border-slate-300 dark:hover:border-white/10 group cursor-pointer">
                                     <div className="flex items-center gap-4">
                                         <div className={cn(
                                             "w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform",
-                                            item.status === 'Success' ? "bg-emerald-500/10 text-emerald-500" :
-                                                item.status === 'Processing' ? "bg-yellow-500/10 text-yellow-500" :
-                                                    "bg-red-500/10 text-red-500"
+                                            item.type === 'credit' ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
                                         )}>
-                                            <ArrowUpRight className="w-5 h-5" />
+                                            {item.type === 'credit' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                                         </div>
                                         <div>
-                                            <p className="font-black text-black dark:text-white text-lg">₵{120 * item.id}.00</p>
-                                            <p className="text-[10px] font-bold text-slate-600 dark:text-slate-600 uppercase tracking-widest">JAN 1{item.id}, 10:45 AM</p>
+                                            <p className="font-black text-black dark:text-white text-lg">₵{Number(item.amount).toFixed(2)}</p>
+                                            <p className="text-[10px] font-bold text-slate-600 dark:text-slate-600 uppercase tracking-widest">
+                                                {new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
                                         <span className={cn(
                                             "px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
-                                            item.color
+                                            item.status === 'success' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                                                item.status === 'processing' ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" :
+                                                    "bg-red-500/10 text-red-600 border-red-500/20"
                                         )}>
                                             {item.status}
                                         </span>

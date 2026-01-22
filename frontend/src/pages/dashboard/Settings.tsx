@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     User, Mail, Phone, MessageCircle, Wallet,
     CheckCircle2, Shield, Edit3, Trash2,
-    ExternalLink, Network, Check
+    ExternalLink, Check
 } from 'lucide-react';
 import Button from '@/components/Button';
 import { useAuth } from '@/context/AuthContext';
@@ -11,16 +11,6 @@ import { cn } from '@/utils/cn';
 const Settings: React.FC = () => {
     const { user } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
-
-    // Mock additional user data for UI matching
-    const userData = {
-        commission: 0.00,
-        network: 'MTN',
-        status: 'approved',
-        phone: '0541349282',
-        emailVerified: true,
-        phoneVerified: true
-    };
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
@@ -41,16 +31,16 @@ const Settings: React.FC = () => {
                         <div className="flex flex-col items-center text-center space-y-4 mb-8">
                             <div className="relative">
                                 <div className="w-24 h-24 rounded-[2rem] bg-primary flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-primary/30 ring-4 ring-white dark:ring-slate-800">
-                                    {user?.fullName?.charAt(0) || 'U'}
+                                    {(user?.fullName || user?.email)?.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-800 flex items-center justify-center shadow-lg">
                                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
                                 </div>
                             </div>
                             <div>
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white">{user?.fullName || 'User Name'}</h3>
+                                <h3 className="text-2xl font-black text-slate-900 dark:text-white">{user?.fullName || 'Member'}</h3>
                                 <span className="inline-block px-3 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mt-1 border border-primary/20">
-                                    {user?.role || 'Dealer'}
+                                    {user?.role || 'User'}
                                 </span>
                             </div>
                         </div>
@@ -70,7 +60,7 @@ const Settings: React.FC = () => {
                                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:scale-110 transition-transform">
                                         <Phone className="w-4 h-4 text-primary" />
                                     </div>
-                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{userData.phone}</span>
+                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{user?.phoneNumber || 'Not provided'}</span>
                                 </div>
                                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                             </div>
@@ -86,25 +76,16 @@ const Settings: React.FC = () => {
                                 <span className="text-base font-black text-emerald-600 dark:text-emerald-400">GH₵ {user?.walletBalance?.toFixed(2) || '0.00'}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3 text-purple-600 dark:text-purple-400">
-                                    <Edit3 className="w-4 h-4" />
-                                    <span className="text-sm font-bold">Commission Earned</span>
-                                </div>
-                                <span className="text-base font-black text-purple-600 dark:text-purple-400">GH₵ {userData.commission.toFixed(2)}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400 text-opacity-80">
                                     <Shield className="w-4 h-4" />
-                                    <span className="text-sm font-bold">Network</span>
+                                    <span className="text-sm font-bold">Account Status</span>
                                 </div>
-                                <span className="px-2 py-0.5 rounded bg-blue-500/10 text-[10px] font-black text-blue-600">{userData.network}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3 text-orange-600 dark:text-orange-400 text-opacity-80">
-                                    <Shield className="w-4 h-4" />
-                                    <span className="text-sm font-bold">Status</span>
-                                </div>
-                                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-[10px] font-black text-emerald-500">approved</span>
+                                <span className={cn(
+                                    "px-2 py-0.5 rounded text-[10px] font-black",
+                                    user?.isBlocked ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
+                                )}>
+                                    {user?.isBlocked ? 'blocked' : 'active'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -151,7 +132,7 @@ const Settings: React.FC = () => {
                                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Phone Number</label>
                                 <input
                                     type="tel"
-                                    defaultValue={userData.phone}
+                                    defaultValue={user?.phoneNumber}
                                     disabled={!isEditing}
                                     className="w-full px-5 py-3.5 rounded-2xl bg-slate-50/50 dark:bg-black/20 border border-transparent focus:border-primary/50 outline-none transition-all font-bold text-slate-900 dark:text-white disabled:opacity-50"
                                 />
@@ -183,7 +164,7 @@ const Settings: React.FC = () => {
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-sm font-black text-emerald-500">Phone Number</p>
-                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">{userData.phone}</p>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">{user?.phoneNumber || 'Not provided'}</p>
                                 </div>
                             </div>
                         </div>

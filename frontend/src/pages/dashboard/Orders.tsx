@@ -1,8 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Filter, ChevronRight } from 'lucide-react';
+import axios from 'axios';
 import { cn } from '@/utils/cn';
 
 const Orders: React.FC = () => {
+    const [orders, setOrders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get('http://localhost:5000/dashboard/orders', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setOrders(response.data.orders);
+            } catch (error) {
+                console.error('Failed to fetch orders', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOrders();
+    }, []);
+
+    const filteredOrders = orders.filter(o =>
+        o.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.bundle_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -16,6 +45,8 @@ const Orders: React.FC = () => {
                         <input
                             type="text"
                             placeholder="Order ID or number..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 focus:border-slate-400 dark:focus:border-primary outline-none transition-all w-full md:w-64 text-slate-900 dark:text-white"
                         />
                     </div>
@@ -36,25 +67,34 @@ const Orders: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-white/5">
-                            {[{ id: 1, status: 'Completed', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-                            { id: 2, status: 'Processing', color: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20' },
-                            { id: 3, status: 'Failed', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
-                            { id: 4, status: 'Completed', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-                            { id: 5, status: 'Completed', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' }].map((item) => (
+                            {loading ? (
+                                [1, 2, 3, 4, 5].map(i => (
+                                    <tr key={i}><td colSpan={6} className="px-6 py-5 animate-pulse"><div className="h-8 bg-slate-200 dark:bg-white/5 rounded w-full" /></td></tr>
+                                ))
+                            ) : filteredOrders.length === 0 ? (
+                                <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold">No orders found.</td></tr>
+                            ) : filteredOrders.map((item) => (
                                 <tr key={item.id} className="hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group">
-                                    <td className="px-6 py-5 font-mono text-sm font-black text-black dark:text-slate-400">#ORD-942{item.id}</td>
+                                    <td className="px-6 py-5 font-mono text-sm font-black text-black dark:text-slate-400 uppercase">#{item.id.slice(0, 8)}</td>
                                     <td className="px-6 py-5">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
-                                            <span className="font-black text-black dark:text-slate-300">MTN</span>
+                                            <div className={cn(
+                                                "w-2.5 h-2.5 rounded-full",
+                                                item.network === 'MTN' ? "bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.5)]" :
+                                                    item.network === 'Telecel' ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" :
+                                                        "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                                            )} />
+                                            <span className="font-black text-black dark:text-slate-300">{item.network}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-5 font-black text-black dark:text-white">10GB Data - Monthly</td>
-                                    <td className="px-6 py-5 text-black dark:text-slate-400 font-black">024412345{item.id}</td>
+                                    <td className="px-6 py-5 font-black text-black dark:text-white">{item.bundle_name}</td>
+                                    <td className="px-6 py-5 text-black dark:text-slate-400 font-black">{item.phone}</td>
                                     <td className="px-6 py-5">
                                         <span className={cn(
                                             "px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border",
-                                            item.color
+                                            item.status === 'success' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" :
+                                                item.status === 'processing' ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" :
+                                                    "bg-red-500/10 text-red-600 border-red-500/20"
                                         )}>
                                             {item.status}
                                         </span>

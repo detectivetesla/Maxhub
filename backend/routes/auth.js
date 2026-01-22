@@ -3,7 +3,23 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const authMiddleware = require('../middleware/auth');
 require('dotenv').config();
+
+router.get('/me', authMiddleware, async (req, res) => {
+    try {
+        const result = await db.query(
+            'SELECT id, email, full_name, wallet_balance, role, is_blocked, created_at FROM users WHERE id = $1',
+            [req.user.id]
+        );
+        const user = result.rows[0];
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.json({ user: { ...user, fullName: user.full_name, walletBalance: Number(user.wallet_balance) } });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch user', error: error.message });
+    }
+});
 
 router.post('/register', async (req, res) => {
     try {

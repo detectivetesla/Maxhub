@@ -1,48 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-    Users, Database, Activity, AlertCircle,
-    Zap, ChevronRight, BarChart3, TrendingUp,
-    Clock, ShieldCheck, Server, Settings,
-    Plus, ShoppingBag, Mail, ArrowRight,
-    Search, LayoutGrid, Eye, Flag,
-    Shield
+    Users, Database, Activity,
+    Zap, BarChart3, TrendingUp,
+    ShieldCheck, LayoutGrid, Eye, Flag,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/context/AuthContext';
 
 const AdminPage: React.FC = () => {
     const { user } = useAuth();
     const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+    const [statsData, setStatsData] = useState({
+        totalUsers: 0,
+        todayOrders: 0,
+        todayRevenue: 0,
+        lifetimeRevenue: 0
+    });
+    const [recentOrders, setRecentOrders] = useState<any[]>([]);
+    const [newUsers, setNewUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: `Bearer ${token}` };
+
+                const [statsRes, dataRes] = await Promise.all([
+                    axios.get('http://localhost:5000/admin/stats', { headers }),
+                    axios.get('http://localhost:5000/admin/recent-data', { headers })
+                ]);
+
+                setStatsData(statsRes.data);
+                setRecentOrders(dataRes.data.recentOrders);
+                setNewUsers(dataRes.data.newUsers);
+            } catch (error) {
+                console.error('Failed to fetch admin data', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAdminData();
+    }, []);
 
     const stats = [
-        { label: 'TOTAL USERS', value: '60', icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
-        { label: "TODAY'S ORDERS", value: '0', icon: Database, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
-        { label: "TODAY'S REVENUE", value: 'GH₵ 0', icon: BarChart3, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-        { label: 'LIFETIME REVENUE', value: 'GH₵ 522', icon: TrendingUp, color: 'text-[#2ECC71]', bg: 'bg-[#2ECC71]/10', border: 'border-[#2ECC71]/20', isPrimary: true },
-    ];
-
-    const quickActions = [
-        { label: 'ADD NEW USER', desc: 'Create user accounts', icon: Plus, path: '/admin/users#add' },
-        { label: 'VIEW ORDERS', desc: 'Track and manage orders', icon: Database, path: '/admin/orders' },
-        { label: 'MANAGE AGENTS', desc: 'View resellers & agents', icon: Users, path: '/admin/agents' },
-        { label: 'SEND EMAIL', desc: 'Email users & agents', icon: Mail, path: '/admin/email' },
-    ];
-
-    const recentOrders = [
-        { id: '#ORD-96A', user: 'Solomon Ntiamoah', network: 'MTN', status: 'Completed', color: 'bg-yellow-400 text-slate-900' },
-        { id: '#ORD-834', user: 'Martin Nomotsu', network: 'MTN', status: 'Completed', color: 'bg-yellow-400 text-slate-900' },
-        { id: '#ORD-0A5', user: 'Nicholas EA', network: 'MTN', status: 'Completed', color: 'bg-yellow-400 text-slate-900' },
-        { id: '#ORD-B8F', user: 'Nicholas EA', network: 'MTN', status: 'Failed', color: 'bg-yellow-400 text-slate-900' },
-        { id: '#ORD-017', user: 'Nicholas EA', network: 'MTN', status: 'Failed', color: 'bg-yellow-400 text-slate-900' },
-    ];
-
-    const newUsers = [
-        { name: 'Caleb Adzokatse', email: 'adzokatsekaleb@gmail.com', initials: 'CA', color: 'bg-pink-500' },
-        { name: 'edward amponsah', email: 'amponsahkay3@gmail.com', initials: 'EA', color: 'bg-purple-600' },
-        { name: 'Edward Amponsah Baah', email: 'amponsahbaaho@gmail.com', initials: 'EA', color: 'bg-blue-600' },
-        { name: 'Nadeem Mohammed', email: 'nadeemtraoure2005@gmail.com', initials: 'NM', color: 'bg-pink-500' },
-        { name: 'Nicholas EA', email: 'nickcwusi99@gmail.com', initials: 'NE', color: 'bg-purple-500' },
+        { label: 'TOTAL USERS', value: statsData.totalUsers.toString(), icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+        { label: "TODAY'S ORDERS", value: statsData.todayOrders.toString(), icon: Database, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+        { label: "TODAY'S REVENUE", value: `GH₵ ${statsData.todayRevenue.toLocaleString()}`, icon: BarChart3, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+        { label: 'LIFETIME REVENUE', value: `GH₵ ${statsData.lifetimeRevenue.toLocaleString()}`, icon: TrendingUp, color: 'text-[#2ECC71]', bg: 'bg-[#2ECC71]/10', border: 'border-[#2ECC71]/20', isPrimary: true },
     ];
 
     return (
@@ -55,7 +63,7 @@ const AdminPage: React.FC = () => {
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-                            Welcome back, {user?.fullName?.split(' ')[0] || 'Test User'}!
+                            Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'}!
                         </h1>
                         <p className="text-slate-400 font-bold max-w-xl text-lg leading-relaxed">
                             Your platform analytics and system controls are ready. Here's a summary of today's performance.
@@ -95,25 +103,6 @@ const AdminPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {quickActions.map((action) => (
-                    <Link
-                        key={action.label}
-                        to={action.path}
-                        className="bg-[#0B0F19] border border-white/5 p-8 rounded-[2rem] hover:border-[#2ECC71]/30 transition-all group flex flex-col items-center text-center gap-4 shadow-sm"
-                    >
-                        <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                            <action.icon className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h4 className="text-white font-black text-xs uppercase tracking-widest">{action.label}</h4>
-                            <p className="text-slate-500 text-[10px] font-bold mt-1">{action.desc}</p>
-                        </div>
-                    </Link>
-                ))}
-            </div>
-
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat) => (
@@ -121,15 +110,22 @@ const AdminPage: React.FC = () => {
                         "p-8 rounded-[2rem] border relative overflow-hidden transition-all group",
                         stat.isPrimary ? "bg-[#0B0F19] border-[#2ECC71]/20" : "bg-[#0B0F19] border-white/5"
                     )}>
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className={cn("p-3 rounded-xl border", stat.bg, stat.border)}>
-                                <stat.icon className={cn("w-5 h-5", stat.color)} />
+                        {loading ? (
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-4 w-1/2 bg-white/5 rounded" />
+                                <div className="h-8 w-3/4 bg-white/10 rounded" />
                             </div>
-                            <div className="flex flex-col">
-                                <h3 className="text-2xl font-black text-white">{stat.value}</h3>
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mt-1">{stat.label}</p>
+                        ) : (
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className={cn("p-3 rounded-xl border", stat.bg, stat.border)}>
+                                    <stat.icon className={cn("w-5 h-5", stat.color)} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <h3 className="text-2xl font-black text-white">{stat.value}</h3>
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mt-1">{stat.label}</p>
+                                </div>
                             </div>
-                        </div>
+                        )}
                         {stat.isPrimary && (
                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-125 transition-transform duration-500">
                                 <TrendingUp className="w-16 h-16 text-[#2ECC71]" />
@@ -160,19 +156,28 @@ const AdminPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {recentOrders.map((order) => (
+                                {loading ? (
+                                    [1, 2, 3].map(i => <tr key={i}><td colSpan={4} className="py-4 animate-pulse"><div className="h-8 bg-white/5 rounded w-full" /></td></tr>)
+                                ) : recentOrders.length === 0 ? (
+                                    <tr><td colSpan={4} className="py-8 text-center text-slate-500 font-bold">No recent orders.</td></tr>
+                                ) : recentOrders.map((order) => (
                                     <tr key={order.id} className="group hover:bg-white/[0.02] transition-colors">
-                                        <td className="py-4 text-xs font-bold text-slate-400">{order.id}</td>
-                                        <td className="py-4 text-xs font-black text-white">{order.user}</td>
+                                        <td className="py-4 text-xs font-bold text-slate-400 uppercase">#{order.id.slice(0, 8)}</td>
+                                        <td className="py-4 text-xs font-black text-white">{order.user_name}</td>
                                         <td className="py-4">
-                                            <span className={cn("px-2 py-1 rounded-md text-[10px] font-black uppercase", order.color)}>
+                                            <span className={cn(
+                                                "px-2 py-1 rounded-md text-[10px] font-black uppercase",
+                                                order.network === 'MTN' ? "bg-yellow-400 text-slate-900" :
+                                                    order.network === 'Telecel' ? "bg-red-500 text-white" :
+                                                        "bg-blue-500 text-white"
+                                            )}>
                                                 {order.network}
                                             </span>
                                         </td>
                                         <td className="py-4">
                                             <span className={cn(
                                                 "px-3 py-1.5 rounded-full text-[10px] font-black",
-                                                order.status === 'Completed' ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
+                                                order.status === 'success' ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-600"
                                             )}>
                                                 {order.status}
                                             </span>
@@ -194,23 +199,24 @@ const AdminPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-6">
-                        {newUsers.map((user) => (
-                            <div key={user.email} className="flex items-center justify-between group">
+                        {loading ? (
+                            [1, 2, 3, 4, 5].map(i => <div key={i} className="h-12 bg-white/5 rounded-xl animate-pulse" />)
+                        ) : newUsers.length === 0 ? (
+                            <p className="text-center text-slate-500 font-bold">No new users.</p>
+                        ) : newUsers.map((u) => (
+                            <div key={u.email} className="flex items-center justify-between group">
                                 <div className="flex items-center gap-4">
-                                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-xs", user.color)}>
-                                        {user.initials}
+                                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-xs bg-slate-800")}>
+                                        {u.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                                     </div>
                                     <div className="min-w-0">
-                                        <h4 className="text-sm font-black text-white truncate">{user.name}</h4>
-                                        <p className="text-[10px] font-bold text-slate-500 truncate">{user.email}</p>
+                                        <h4 className="text-sm font-black text-white truncate">{u.full_name}</h4>
+                                        <p className="text-[10px] font-bold text-slate-500 truncate">{u.email}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-colors">
                                         <Eye className="w-4 h-4" />
-                                    </button>
-                                    <button className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-colors">
-                                        <Flag className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
