@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import axios from 'axios';
+import { supabase } from '@/utils/supabase';
 
 const AdminOrdersPage: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -16,6 +17,20 @@ const AdminOrdersPage: React.FC = () => {
 
     useEffect(() => {
         fetchOrders();
+
+        // Supabase Realtime Listener
+        const channel = supabase
+            .channel('admin-orders-updates')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'orders' },
+                () => fetchOrders()
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const fetchOrders = async () => {

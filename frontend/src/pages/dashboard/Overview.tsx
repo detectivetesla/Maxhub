@@ -15,6 +15,7 @@ import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/utils/cn';
 import { LineChartPlaceholder, DonutChartPlaceholder } from '@/components/ChartPlaceholders';
+import { supabase } from '@/utils/supabase';
 
 const Overview: React.FC = () => {
     const { user } = useAuth();
@@ -51,6 +52,25 @@ const Overview: React.FC = () => {
         };
 
         fetchDashboardData();
+
+        // Supabase Realtime Listener
+        const channel = supabase
+            .channel('dashboard-updates')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'orders' },
+                () => fetchDashboardData()
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'transactions' },
+                () => fetchDashboardData()
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const statCards = [
