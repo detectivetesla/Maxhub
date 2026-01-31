@@ -1,36 +1,36 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* DEFAULT: Neutral Slate Theme */
-    --background: 210 20% 98%;
+    /* DEFAULT: Mint White Theme */
+    --background: 150 20% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-    --border: 214.3 31.8% 91.4%;
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
+    --border: 214 32% 88%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
     --sidebar: 0 0% 100%;
-    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-border: 214 32% 88%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
   }
 
   .dark {
-    /* Neutral Dark Theme */
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 4%;
-    --card-foreground: 0 0% 98%;
-    --border: 240 5.9% 10%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --sidebar: 240 10% 4%;
-    --sidebar-border: 240 5.9% 10%;
-    --muted: 240 5.9% 10%;
-    --muted-foreground: 240 5% 64.9%;
+    /* Midnight Navy Theme */
+    --background: 222 39% 7%;
+    --foreground: 210 40% 98%;
+    --card: 222 39% 11%;
+    --card-foreground: 210 40% 98%;
+    --border: 222 39% 18%;
+    --primary: 160 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --sidebar: 222 47% 9%;
+    --sidebar-border: 222 39% 15%;
+    --muted: 222 39% 15%;
+    --muted-foreground: 215 20% 65%;
   }
 
   body {

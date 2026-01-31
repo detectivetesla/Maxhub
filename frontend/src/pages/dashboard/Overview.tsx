@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Wallet,
@@ -75,25 +75,25 @@ const Overview: React.FC = () => {
     }, []);
 
     const statCards = [
-        { label: 'Wallet Balance', value: `GH₵ ${Number(stats.walletBalance || 0).toLocaleString()}`, icon: Wallet, color: 'text-slate-900 dark:text-white', bgColor: 'bg-white dark:bg-white/5', accent: 'bg-orange-500', trend: '+0.0%' },
-        { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: 'text-slate-900 dark:text-white', bgColor: 'bg-white dark:bg-white/5', accent: 'bg-emerald-500', trend: '+0' },
-        { label: 'Processing Orders', value: stats.processingOrders.toString(), icon: Clock, color: 'text-slate-900 dark:text-white', bgColor: 'bg-white dark:bg-white/5', accent: 'bg-blue-500', trend: '0' },
-        { label: 'Completed Orders', value: stats.completedOrders.toString(), icon: CheckCircle2, color: 'text-slate-900 dark:text-white', bgColor: 'bg-white dark:bg-white/5', accent: 'bg-purple-500', trend: '+0' },
+        { label: 'Wallet Balance', value: `GHΓé╡ ${stats.walletBalance.toLocaleString()}`, icon: Wallet, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/10', iconBg: 'bg-orange-500', trend: '+0.0%' },
+        { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10', iconBg: 'bg-emerald-500', trend: '+0' },
+        { label: 'Processing Orders', value: stats.processingOrders.toString(), icon: Clock, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10', iconBg: 'bg-blue-500', trend: '0' },
+        { label: 'Completed Orders', value: stats.completedOrders.toString(), icon: CheckCircle2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-500/10', iconBg: 'bg-purple-500', trend: '+0' },
     ];
 
     const getNetworkLogo = (network: string) => {
         const net = network?.toLowerCase() || '';
         if (net.includes('mtn')) return '/logos/mtn.png';
         if (net.includes('telecel')) return '/logos/telecel.png';
-        if (net.includes('at') || net.includes('airtel') || net.includes('tigo')) return '/logos/airteltigo.png';
+        if (net.includes('airtel') || net.includes('tigo') || net.includes('at')) return '/logos/airteltigo.png';
         return '/logos/default.png';
     };
 
     const getNetworkColor = (network: string) => {
         const net = network?.toLowerCase() || '';
-        if (net.includes('mtn')) return 'bg-yellow-400';
-        if (net.includes('telecel')) return 'bg-red-500';
-        if (net.includes('at') || net.includes('airtel') || net.includes('tigo')) return 'bg-blue-600';
+        if (net.includes('mtn')) return 'bg-[#FFCC00]';
+        if (net.includes('telecel')) return 'bg-[#E60000]';
+        if (net.includes('airtel') || net.includes('tigo') || net.includes('at')) return 'bg-[#003876]';
         return 'bg-slate-400';
     };
 
@@ -121,26 +121,27 @@ const Overview: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {statCards.map((stat, i) => (
                             <div key={i} className={cn(
-                                "p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all group border border-slate-100 dark:border-white/5 bg-white dark:bg-white/5 relative overflow-hidden",
-                                "hover:border-primary/20"
+                                "p-4 sm:p-5 md:p-6 rounded-3xl sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all group border relative overflow-hidden",
+                                stat.bgColor,
+                                "border-transparent hover:border-primary/20"
                             )}>
                                 {loading ? (
                                     <div className="animate-pulse space-y-4">
-                                        <div className="w-10 h-10 bg-slate-200 dark:bg-white/10 rounded-xl" />
+                                        <div className="w-12 h-12 bg-slate-200 dark:bg-white/10 rounded-xl" />
                                         <div className="h-8 w-3/4 bg-slate-200 dark:bg-white/10 rounded" />
                                     </div>
                                 ) : (
-                                    <div className="flex justify-between items-start relative z-10 w-full">
-                                        <div className="space-y-4">
+                                    <div className="flex justify-between items-start relative z-10">
+                                        <div className="space-y-2 sm:space-y-3 md:space-y-4">
                                             <div className={cn(
-                                                "w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110",
-                                                stat.accent
+                                                "w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110",
+                                                stat.iconBg
                                             )}>
-                                                <stat.icon className="w-5 h-5" />
+                                                <stat.icon className="w-4 h-4 sm:w-5 h-5 md:w-6 md:h-6" />
                                             </div>
                                             <div>
-                                                <p className={cn("text-2xl sm:text-3xl font-black tracking-tight", stat.color)}>{stat.value}</p>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{stat.label}</p>
+                                                <p className={cn("text-xl sm:text-2xl md:text-4xl font-black tracking-tight", stat.color)}>{stat.value}</p>
+                                                <p className="text-[10px] sm:text-xs md:text-sm font-black text-slate-700 dark:text-slate-400 uppercase tracking-widest mt-0.5 md:mt-1">{stat.label}</p>
                                             </div>
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
@@ -242,9 +243,9 @@ const Overview: React.FC = () => {
                         </div>
                         <div className="space-y-4">
                             {[
-                                { name: 'MTN Ghana', color: 'bg-yellow-400', percent: 'N/A' },
-                                { name: 'Telecel', color: 'bg-red-500', percent: 'N/A' },
-                                { name: 'AT Network', color: 'bg-blue-600', percent: 'N/A' },
+                                { name: 'MTN Ghana', color: 'bg-[#FFCC00]', percent: 'N/A' },
+                                { name: 'Telecel', color: 'bg-[#E60000]', percent: 'N/A' },
+                                { name: 'AirtelTigo', color: 'bg-[#003876]', percent: 'N/A' },
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -281,7 +282,7 @@ const Overview: React.FC = () => {
                                             <Wallet className="w-6 h-6 text-white" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-black text-black dark:text-white">GH₵ {Number(item.amount).toFixed(2)}</p>
+                                            <p className="text-sm font-black text-black dark:text-white">GHΓé╡ {Number(item.amount).toFixed(2)}</p>
                                             <p className="text-[10px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-tighter">
                                                 {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
@@ -326,7 +327,7 @@ const Overview: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

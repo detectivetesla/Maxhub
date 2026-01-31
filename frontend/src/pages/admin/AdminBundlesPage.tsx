@@ -196,16 +196,12 @@ const AdminBundlesPage: React.FC = () => {
                                 }
                             </div>
                             <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{bundle.data_amount}</h3>
-                            <p className="text-sm font-bold text-slate-500 mb-6 truncate">{bundle.name}</p>
+                            <p className="text-sm font-bold text-slate-500 mb-6 truncate">{bundle.network} Data Plan</p>
 
                             <div className="flex items-center justify-between gap-4">
                                 <div className="space-y-1">
-                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Customer Price</div>
-                                    <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">₵{Number(bundle.price_ghc).toFixed(2)}</div>
-                                </div>
-                                <div className="space-y-1 text-right">
-                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Agent Price</div>
-                                    <div className="text-xl font-black text-emerald-500 tracking-tight">₵{Number(bundle.agent_price_ghc).toFixed(2)}</div>
+                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Price</div>
+                                    <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">₵{Number(bundle.price_ghc).toFixed(2)}</div>
                                 </div>
                             </div>
 
@@ -263,16 +259,6 @@ const AdminBundlesPage: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Display Name</label>
-                                    <input
-                                        name="name"
-                                        defaultValue={editingBundle?.name}
-                                        placeholder="Mega Deal"
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-emerald-500/50 outline-none transition-all font-bold"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Data Amount</label>
                                     <select
                                         name="data_amount"
@@ -292,18 +278,6 @@ const AdminBundlesPage: React.FC = () => {
                                         step="0.01"
                                         defaultValue={editingBundle?.price_ghc || 0}
                                         placeholder="5.00"
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Agent Price (GH₵)</label>
-                                    <input
-                                        name="agent_price_ghc"
-                                        type="number"
-                                        step="0.01"
-                                        defaultValue={editingBundle?.agent_price_ghc || 0}
-                                        placeholder="4.50"
                                         className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold"
                                         required
                                     />
