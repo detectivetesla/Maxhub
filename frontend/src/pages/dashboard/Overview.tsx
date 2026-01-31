@@ -97,12 +97,19 @@ const Overview: React.FC = () => {
         return 'bg-slate-400';
     };
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 17) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Greeting */}
             <div className="mb-6 md:mb-8">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-black dark:text-white mb-1">
-                    Good Morning, <span className="text-primary">{user?.fullName?.split(' ')[0] || 'Member'}!</span>
+                    {getGreeting()}, <span className="text-primary">{user?.fullName?.split(' ')[0] || 'Member'}!</span>
                 </h1>
                 <p className="text-xs sm:text-sm md:text-base text-slate-700 dark:text-slate-400 font-bold">Here's what's happening today.</p>
             </div>
