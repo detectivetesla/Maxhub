@@ -1,15 +1,22 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     Wallet,
-    Database,
     ShoppingBag,
     Clock,
     CheckCircle2,
     MoreHorizontal,
     ArrowLeftRight,
     Plus,
-    Download
+    Download,
+    Database,
+    CreditCard,
+    ArrowUpRight,
+    Zap,
+    ArrowRight,
+    Bell,
+    Calendar,
+    TrendingUp
 } from 'lucide-react';
 import axios from 'axios';
 import api from '@/utils/api';
@@ -20,6 +27,7 @@ import { supabase } from '@/utils/supabase';
 
 const Overview: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         walletBalance: 0,
         totalOrders: 0,
@@ -75,10 +83,10 @@ const Overview: React.FC = () => {
     }, []);
 
     const statCards = [
-        { label: 'Wallet Balance', value: `GHΓé╡ ${stats.walletBalance.toLocaleString()}`, icon: Wallet, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/10', iconBg: 'bg-orange-500', trend: '+0.0%' },
-        { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10', iconBg: 'bg-emerald-500', trend: '+0' },
-        { label: 'Processing Orders', value: stats.processingOrders.toString(), icon: Clock, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10', iconBg: 'bg-blue-500', trend: '0' },
-        { label: 'Completed Orders', value: stats.completedOrders.toString(), icon: CheckCircle2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-500/10', iconBg: 'bg-purple-500', trend: '+0' },
+        { label: 'Wallet Balance', value: `GH₵ ${stats.walletBalance.toLocaleString()}`, icon: Wallet, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/10', iconBg: 'bg-orange-500', trend: '+0.0%', path: '/dashboard/wallet' },
+        { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10', iconBg: 'bg-emerald-500', trend: '+0', path: '/dashboard/orders' },
+        { label: 'Processing Orders', value: stats.processingOrders.toString(), icon: Clock, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10', iconBg: 'bg-blue-500', trend: '0', path: '/dashboard/orders?status=processing' },
+        { label: 'Completed Orders', value: stats.completedOrders.toString(), icon: CheckCircle2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-500/10', iconBg: 'bg-purple-500', trend: '+0', path: '/dashboard/orders?status=completed' },
     ];
 
     const getNetworkLogo = (network: string) => {
@@ -120,11 +128,15 @@ const Overview: React.FC = () => {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {statCards.map((stat, i) => (
-                            <div key={i} className={cn(
-                                "p-4 sm:p-5 md:p-6 rounded-3xl sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all group border relative overflow-hidden",
-                                stat.bgColor,
-                                "border-transparent hover:border-primary/20"
-                            )}>
+                            <div
+                                key={i}
+                                onClick={() => stat.path && navigate(stat.path)}
+                                className={cn(
+                                    "p-4 sm:p-5 md:p-6 rounded-3xl sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all group border relative overflow-hidden cursor-pointer",
+                                    stat.bgColor,
+                                    "border-transparent hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+                                )}
+                            >
                                 {loading ? (
                                     <div className="animate-pulse space-y-4">
                                         <div className="w-12 h-12 bg-slate-200 dark:bg-white/10 rounded-xl" />
