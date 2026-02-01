@@ -288,8 +288,9 @@ const DataBundles: React.FC = () => {
                                 <p className="text-sm opacity-80 font-bold">Purchase {selectedNetwork} data bundles for single or multiple recipients</p>
                             </div>
                         </div>
-                        <div className="px-6 py-3 rounded-full bg-white/20 font-black text-sm shadow-lg backdrop-blur-sm w-fit">
-                            Wallet: GH₵ {user?.walletBalance?.toFixed(2) || '0.00'}
+                        <div className={cn("flex items-center gap-3 px-5 py-3 rounded-2xl border-2 transition-all bg-white/10", "border-white/30")}>
+                            <Wallet className="w-5 h-5" />
+                            <p className="text-lg font-black">GH₵ {user?.walletBalance?.toFixed(2) || '0.00'}</p>
                         </div>
                     </div>
 
