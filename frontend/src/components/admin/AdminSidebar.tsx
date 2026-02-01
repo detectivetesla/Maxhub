@@ -46,7 +46,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
             items: [
                 { icon: Globe, label: 'Networks', path: '/admin/networks', color: 'text-cyan-500' },
                 { icon: Terminal, label: 'API Settings', path: '/admin/developer', color: 'text-slate-500' },
-                { icon: Activity, label: 'System Logs', path: '/admin/logs', color: 'text-emerald-400' },
+                { icon: Activity, label: 'Activity Log', path: '/admin/activity-log', color: 'text-[#2ECC71]' },
             ]
         },
         {

@@ -8,6 +8,7 @@ import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import AdminBundlesPage from '@/pages/admin/AdminBundlesPage';
 import AdminAPIPage from '@/pages/admin/AdminAPIPage';
 import AdminLogsPage from '@/pages/admin/AdminLogsPage';
+import AdminActivityLogPage from '@/pages/admin/AdminActivityLogPage';
 import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
 import AdminOrdersPage from '@/pages/admin/AdminOrdersPage';
 import AdminLogin from '@/pages/admin/AdminLogin';
@@ -78,6 +79,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="developer" element={<AdminAPIPage />} />
                 <Route path="email" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Send Email</h1><p className="text-slate-500">Direct Communication Hub.</p></div>} />
                 <Route path="settings" element={<AdminSettingsPage />} />
+                <Route path="activity-log" element={<AdminActivityLogPage />} />
                 <Route path="logs" element={<AdminLogsPage />} />
             </Route>
             <Route path="/terms" element={<TermsPage />} />

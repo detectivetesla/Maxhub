@@ -3,7 +3,7 @@ import {
     Database, Search, Filter, Download,
     Trash2, AlertCircle, CheckCircle2,
     Info, Clock, User, Zap, ArrowRight,
-    ExternalLink, RefreshCw, ShoppingBag
+    ExternalLink, RefreshCw, ShoppingBag, XCircle
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import axios from 'axios';
@@ -82,11 +82,12 @@ const AdminOrdersPage: React.FC = () => {
             </header>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {[
                     { label: 'Total Orders', value: orders.length.toString(), icon: ShoppingBag, color: 'text-blue-500' },
                     { label: 'Successful', value: orders.filter(o => o.status === 'success').length.toString(), icon: CheckCircle2, color: 'text-emerald-500' },
-                    { label: 'Processing/Failed', value: orders.filter(o => o.status !== 'success').length.toString(), icon: AlertCircle, color: 'text-amber-500' },
+                    { label: 'Processing', value: orders.filter(o => o.status === 'processing').length.toString(), icon: Clock, color: 'text-amber-500' },
+                    { label: 'Failed', value: orders.filter(o => o.status === 'failed').length.toString(), icon: XCircle, color: 'text-red-500' },
                 ].map((stat) => (
                     <div key={stat.label} className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] flex items-center justify-between shadow-sm">
                         <div>
