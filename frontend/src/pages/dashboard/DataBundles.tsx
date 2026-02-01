@@ -283,41 +283,33 @@ const DataBundles: React.FC = () => {
                                 <p className="text-base text-slate-500 font-bold">Purchase {selectedNetwork} data bundles for single or multiple recipients</p>
                             </div>
                         </div>
-                        <div className="px-8 py-3.5 rounded-full bg-emerald-500 text-white font-black text-sm shadow-xl shadow-emerald-500/20 w-fit">
+                        <div className={cn("px-8 py-3.5 rounded-full font-black text-sm shadow-xl w-fit", config.color, config.color === 'bg-[#FFCC00]' ? 'text-black shadow-yellow-500/20' : 'text-white shadow-current/20')}>
                             Wallet: GH₵ {user?.walletBalance?.toFixed(2) || '0.00'}
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-black text-black dark:text-white tracking-tight">Select {selectedNetwork} Offer</h3>
-                            <button onClick={() => setCurrentStep(1)} className="text-xs font-black text-slate-400 hover:text-black dark:hover:text-white flex items-center gap-1 transition-all">
-                                <ArrowLeft className="w-3 h-3" /> Change Network
-                            </button>
-                        </div>
-
-                        {/* Featured Category Card */}
-                        <div className={cn("inline-block p-1 rounded-[2.8rem] bg-gradient-to-br transition-all", config.color.replace('bg-', 'from-') + '/20', "to-transparent")}>
-                            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 border-2 border-white dark:border-white/5 shadow-2xl relative overflow-hidden group min-w-[320px] sm:min-w-[450px]">
-                                <div className={cn("absolute top-8 right-8 px-5 py-2 rounded-full text-white text-[10px] font-black shadow-lg tracking-widest uppercase", config.color, config.color === 'bg-[#FFCC00]' ? 'text-black' : 'text-white')}>
-                                    Selected
-                                </div>
-                                <div className="flex items-start sm:items-center gap-8">
-                                    <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center bg-slate-50 dark:bg-white/5 shrink-0 shadow-inner")}>
-                                        <img src={config.logo} alt={selectedNetwork} className="w-10 h-10 opacity-30 grayscale" />
-                                    </div>
-                                    <div className="space-y-2 text-left">
-                                        <h4 className="text-2xl font-black text-black dark:text-white tracking-tight">Master Beneficiary Data Bundle</h4>
-                                        <p className="text-sm text-slate-500 font-bold max-w-[250px] leading-relaxed">The UP2U data bundle from the {selectedNetwork} Group Share pool.</p>
-                                        <div className="flex items-center gap-5 pt-4">
-                                            <span className="flex items-center gap-2 text-[10px] font-black text-slate-400"><Calendar className="w-3.5 h-3.5 stroke-[3px]" /> 30-90 Days</span>
-                                            <span className="flex items-center gap-2 text-[10px] font-black text-slate-400"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 stroke-[3px]" /> Active</span>
-                                            <span className="flex items-center gap-2 text-[10px] font-black text-slate-400"><List className="w-3.5 h-3.5 stroke-[3px]" /> {bundles.length} Packages</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    {/* Network Switcher Cards */}
+                    <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                        {(Object.keys(networkConfig) as Network[]).map((network) => {
+                            const netConfig = networkConfig[network];
+                            const isSelected = network === selectedNetwork;
+                            return (
+                                <button
+                                    key={network}
+                                    onClick={() => handleNetworkSelect(network)}
+                                    className={cn(
+                                        "flex items-center gap-3 px-5 py-3 rounded-2xl border-2 transition-all shrink-0",
+                                        isSelected
+                                            ? cn(netConfig.color, netConfig.borderColor, "shadow-lg", netConfig.color === 'bg-[#FFCC00]' ? 'text-black' : 'text-white')
+                                            : "bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/10 hover:border-slate-300"
+                                    )}
+                                >
+                                    <img src={netConfig.logo} alt={network} className="w-6 h-6 object-contain" />
+                                    <span className={cn("font-black text-sm", isSelected ? '' : 'text-slate-600 dark:text-slate-400')}>{network}</span>
+                                    {isSelected && <CheckCircle2 className="w-4 h-4" />}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <div className="space-y-6">
@@ -500,8 +492,22 @@ const DataBundles: React.FC = () => {
                     ) : bundles.length === 0 ? (
                         <div className="col-span-full py-12 text-center opacity-40 font-black">NO OFFERS AVAILABLE</div>
                     ) : bundles.map((bundle) => (
-                        <div key={bundle.id} className={cn('relative p-6 rounded-[2rem] bg-white dark:bg-white/[0.02] border-2 transition-all text-left group flex flex-col', 'hover:shadow-2xl active:scale-[0.98]', 'border-slate-200 dark:border-white/10', config.borderColor, "border-opacity-0 hover:border-opacity-100")}>
+                        <div
+                            key={bundle.id}
+                            className={cn(
+                                'relative p-6 rounded-[2rem] bg-white dark:bg-white/[0.02] border-2 transition-all text-left group flex flex-col',
+                                'hover:shadow-2xl active:scale-[0.98]',
+                                'border-slate-200 dark:border-white/10',
+                                `hover:${config.borderColor.replace('border-', 'border-')}`
+                            )}
+                        >
                             {bundle.popular && <div className={cn("absolute -top-3 -right-2 px-4 py-1.5 rounded-full text-white text-[10px] font-black shadow-lg", selectedNetwork === 'MTN' ? 'bg-amber-500' : config.color)}>POPULAR</div>}
+
+                            {/* Icon badge */}
+                            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4", config.color, "bg-opacity-10")}>
+                                <Zap className={cn("w-6 h-6", config.textColor)} />
+                            </div>
+
                             <div className="flex-1 space-y-4">
                                 <div>
                                     <div className={cn('inline-flex px-3 py-1 rounded-lg mb-3 text-[10px] font-black tracking-widest uppercase', config.badgeBg)}>{selectedNetwork}</div>
@@ -516,7 +522,16 @@ const DataBundles: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => handleBundleSelect(bundle)} className={cn("mt-6 w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg shadow-black/5", config.buttonColor, "hover:scale-[1.02] active:scale-[0.98]")}>Select Plan</button>
+                            <button
+                                onClick={() => handleBundleSelect(bundle)}
+                                className={cn(
+                                    "mt-6 w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg",
+                                    config.buttonColor,
+                                    "hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                                )}
+                            >
+                                Select Plan
+                            </button>
                         </div>
                     ))}
                 </div>
