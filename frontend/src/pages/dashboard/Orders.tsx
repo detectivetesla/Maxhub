@@ -8,6 +8,7 @@ const Orders: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -24,11 +25,15 @@ const Orders: React.FC = () => {
         fetchOrders();
     }, []);
 
-    const filteredOrders = orders.filter(o =>
-        o.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.bundle_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredOrders = orders.filter(o => {
+        const matchesSearch = o.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            o.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            o.bundle_name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -50,6 +55,29 @@ const Orders: React.FC = () => {
                     </div>
                 </div>
             </header>
+
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
+                {[
+                    { id: 'all', label: 'All' },
+                    { id: 'processing', label: 'Processing' },
+                    { id: 'success', label: 'Completed' },
+                    { id: 'failed', label: 'Failed' }
+                ].map((filter) => (
+                    <button
+                        key={filter.id}
+                        onClick={() => setStatusFilter(filter.id)}
+                        className={cn(
+                            "px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+                            statusFilter === filter.id
+                                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                                : "bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
+                        )}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
+            </div>
 
             <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden transition-all duration-300">
                 <div className="overflow-x-auto">
