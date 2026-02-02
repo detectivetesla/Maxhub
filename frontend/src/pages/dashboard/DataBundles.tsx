@@ -407,204 +407,203 @@ const DataBundles: React.FC = () => {
                     </div>
                 </div>
             </div>
-            </div >
         );
 
-const GridModeView = () => (
-    <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+        const GridModeView = () => (
+            <div className="space-y-6 animate-in fade-in zoom-in duration-500">
 
-        <div className={cn('grid gap-3 sm:gap-6', 'grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4')}>
-            {loading ? (
-                [1, 2, 3, 4].map(i => <div key={i} className="h-48 rounded-3xl bg-slate-100 dark:bg-white/5 animate-pulse" />)
-            ) : bundles.length === 0 ? (
-                <div className="col-span-full py-12 text-center opacity-40 font-black">NO OFFERS AVAILABLE</div>
-            ) : bundles.map((bundle) => (
-                <div
-                    key={bundle.id}
-                    className={cn(
-                        'relative p-6 rounded-[1.5rem] bg-[#0B0F19] border-2 transition-all text-left group flex flex-col',
-                        'hover:shadow-2xl active:scale-[0.98]',
-                        config.borderColor.replace('border-', 'border-').replace('border-[#FFCC00]', 'border-[#FFCC00]/20').replace('border-[#E60000]', 'border-[#E60000]/20').replace('border-[#003876]', 'border-[#003876]/20')
-                    )}
-                >
-                    <div className="flex justify-between items-start mb-6">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-white/5")}>
-                            <Zap className={cn("w-5 h-5", config.textColor)} />
-                        </div>
-                        <div className="flex flex-col items-end">
-                            <div className="flex flex-col items-end leading-none">
-                                <div className="px-2 py-0.5 rounded-sm bg-blue-500/20 text-blue-500 text-[8px] font-black tracking-tighter mb-1">
-                                    AGENT PRICE
+                <div className={cn('grid gap-3 sm:gap-6', 'grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4')}>
+                    {loading ? (
+                        [1, 2, 3, 4].map(i => <div key={i} className="h-48 rounded-3xl bg-slate-100 dark:bg-white/5 animate-pulse" />)
+                    ) : bundles.length === 0 ? (
+                        <div className="col-span-full py-12 text-center opacity-40 font-black">NO OFFERS AVAILABLE</div>
+                    ) : bundles.map((bundle) => (
+                        <div
+                            key={bundle.id}
+                            className={cn(
+                                'relative p-6 rounded-[1.5rem] bg-[#0B0F19] border-2 transition-all text-left group flex flex-col',
+                                'hover:shadow-2xl active:scale-[0.98]',
+                                config.borderColor.replace('border-', 'border-').replace('border-[#FFCC00]', 'border-[#FFCC00]/20').replace('border-[#E60000]', 'border-[#E60000]/20').replace('border-[#003876]', 'border-[#003876]/20')
+                            )}
+                        >
+                            <div className="flex justify-between items-start mb-6">
+                                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-white/5")}>
+                                    <Zap className={cn("w-5 h-5", config.textColor)} />
                                 </div>
-                                <div className="text-white/40 text-[8px] font-black mr-1">PRICE</div>
+                                <div className="flex flex-col items-end">
+                                    <div className="flex flex-col items-end leading-none">
+                                        <div className="px-2 py-0.5 rounded-sm bg-blue-500/20 text-blue-500 text-[8px] font-black tracking-tighter mb-1">
+                                            AGENT PRICE
+                                        </div>
+                                        <div className="text-white/40 text-[8px] font-black mr-1">PRICE</div>
+                                    </div>
+                                    <div className={cn('text-xl font-black mt-1', config.textColor)}>
+                                        GH₵ {bundle.price.toFixed(2)}
+                                    </div>
+                                </div>
                             </div>
-                            <div className={cn('text-xl font-black mt-1', config.textColor)}>
-                                GH₵ {bundle.price.toFixed(2)}
+
+                            <div className="flex-1 mb-8">
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <h4 className="text-5xl font-black text-white tracking-tighter leading-none">
+                                        {bundle.data.split(' ')[0]}<span className="text-4xl">{bundle.data.split(' ')[1] || ''}</span>
+                                    </h4>
+                                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">{selectedNetwork}</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">{bundle.validity}</span>
+                                    <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">RELIABLE</span>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div className="flex-1 mb-8">
-                        <div className="flex items-baseline gap-2 mb-2">
-                            <h4 className="text-5xl font-black text-white tracking-tighter leading-none">
-                                {bundle.data.split(' ')[0]}<span className="text-4xl">{bundle.data.split(' ')[1] || ''}</span>
-                            </h4>
-                            <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">{selectedNetwork}</span>
+                            <button
+                                onClick={() => handleBundleSelect(bundle)}
+                                className={cn(
+                                    "w-full py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg",
+                                    config.buttonColor,
+                                    "hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                                )}
+                            >
+                                Select Plan
+                            </button>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">{bundle.validity}</span>
-                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">RELIABLE</span>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => handleBundleSelect(bundle)}
-                        className={cn(
-                            "w-full py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg",
-                            config.buttonColor,
-                            "hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
-                        )}
-                    >
-                        Select Plan
-                    </button>
+                    ))}
                 </div>
-            ))}
-        </div>
-    </div>
-);
+            </div>
+        );
 
-return (
-    <>
-        <SharedHeader />
-        {mode === 'normal' ? <NormalModeView /> : <GridModeView />}
-    </>
-);
+        return (
+            <>
+                <SharedHeader />
+                {mode === 'normal' ? <NormalModeView /> : <GridModeView />}
+            </>
+        );
     };
 
-// Payment View (Step 3) - Only used in Grid Mode
-const PaymentView = () => {
-    if (!selectedBundle || !selectedNetwork) return null;
-    const config = networkConfig[selectedNetwork];
+    // Payment View (Step 3) - Only used in Grid Mode
+    const PaymentView = () => {
+        if (!selectedBundle || !selectedNetwork) return null;
+        const config = networkConfig[selectedNetwork];
 
-    return (
-        <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="p-8 sm:p-12 rounded-[3rem] bg-white dark:bg-white/[0.02] border-2 border-slate-100 dark:border-white/5 shadow-2xl relative overflow-hidden">
-                <div className={cn("absolute top-0 left-0 right-0 h-2", config.color)} />
+        return (
+            <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="p-8 sm:p-12 rounded-[3rem] bg-white dark:bg-white/[0.02] border-2 border-slate-100 dark:border-white/5 shadow-2xl relative overflow-hidden">
+                    <div className={cn("absolute top-0 left-0 right-0 h-2", config.color)} />
 
-                <div className="flex flex-col items-center text-center gap-6">
-                    <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl", config.color)}>
-                        <img src={config.logo} alt={selectedNetwork} className="w-12 h-12 object-contain" />
-                    </div>
-                    <div>
-                        <h3 className="text-3xl font-black text-black dark:text-white tracking-tight">Confirm Purchase</h3>
-                        <p className="text-slate-500 font-bold mt-1">Review your order details below</p>
-                    </div>
-                </div>
-
-                <div className="mt-10 p-8 rounded-3xl bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 space-y-6">
-                    <div className="flex justify-between items-center group">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Network</span>
-                        <span className={cn("text-sm font-black transition-colors", config.textColor)}>{selectedNetwork} Network</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Data Amount</span>
-                        <span className="text-lg font-black text-black dark:text-white">{selectedBundle.data}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Validity</span>
-                        <span className="text-sm font-black text-slate-600 dark:text-slate-300">{selectedBundle.validity}</span>
-                    </div>
-                    <div className="pt-6 border-t border-slate-200 dark:border-white/5 flex justify-between items-center">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Price</span>
-                        <span className={cn("text-3xl font-black", config.textColor)}>GH₵ {selectedBundle.price.toFixed(2)}</span>
-                    </div>
-                </div>
-
-                <div className="mt-10 space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Recipient Phone Number</label>
-                        <div className="relative">
-                            <input
-                                type="tel"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                placeholder="Enter recipient number"
-                                className="w-full px-8 py-5 rounded-2xl bg-slate-50 dark:bg-black/20 border-2 border-transparent focus:border-slate-200 dark:focus:border-white/20 outline-none transition-all font-black text-lg"
-                            />
-                            <div className={cn("absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center bg-opacity-10", config.color)}>
-                                <Zap className={cn("w-4 h-4", config.textColor)} />
-                            </div>
+                    <div className="flex flex-col items-center text-center gap-6">
+                        <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl", config.color)}>
+                            <img src={config.logo} alt={selectedNetwork} className="w-12 h-12 object-contain" />
+                        </div>
+                        <div>
+                            <h3 className="text-3xl font-black text-black dark:text-white tracking-tight">Confirm Purchase</h3>
+                            <p className="text-slate-500 font-bold mt-1">Review your order details below</p>
                         </div>
                     </div>
 
-                    <div className="flex p-4 rounded-2xl bg-blue-500/5 border-2 border-blue-500/10 gap-4">
-                        <Info className="w-6 h-6 text-blue-500 shrink-0" />
-                        <p className="text-xs text-blue-700 dark:text-blue-300 font-bold leading-relaxed">
-                            Please double check the number. Data purchases are processed instantly and usually cannot be reversed.
-                        </p>
+                    <div className="mt-10 p-8 rounded-3xl bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 space-y-6">
+                        <div className="flex justify-between items-center group">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Network</span>
+                            <span className={cn("text-sm font-black transition-colors", config.textColor)}>{selectedNetwork} Network</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Data Amount</span>
+                            <span className="text-lg font-black text-black dark:text-white">{selectedBundle.data}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Validity</span>
+                            <span className="text-sm font-black text-slate-600 dark:text-slate-300">{selectedBundle.validity}</span>
+                        </div>
+                        <div className="pt-6 border-t border-slate-200 dark:border-white/5 flex justify-between items-center">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Price</span>
+                            <span className={cn("text-3xl font-black", config.textColor)}>GH₵ {selectedBundle.price.toFixed(2)}</span>
+                        </div>
                     </div>
 
-                    <button
-                        onClick={handlePayment}
-                        disabled={processing || !phoneNumber}
-                        className={cn(
-                            "w-full py-6 rounded-3xl font-black text-white shadow-2xl transition-all flex items-center justify-center gap-3 text-lg uppercase tracking-[0.2em]",
-                            config.color, config.color === 'bg-[#FFCC00]' ? 'text-black' : 'text-white',
-                            "hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                        )}
-                    >
-                        {processing ? <Loader2 className="w-6 h-6 animate-spin" /> : <span>Complete Purchase</span>}
-                    </button>
+                    <div className="mt-10 space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Recipient Phone Number</label>
+                            <div className="relative">
+                                <input
+                                    type="tel"
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    placeholder="Enter recipient number"
+                                    className="w-full px-8 py-5 rounded-2xl bg-slate-50 dark:bg-black/20 border-2 border-transparent focus:border-slate-200 dark:focus:border-white/20 outline-none transition-all font-black text-lg"
+                                />
+                                <div className={cn("absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center bg-opacity-10", config.color)}>
+                                    <Zap className={cn("w-4 h-4", config.textColor)} />
+                                </div>
+                            </div>
+                        </div>
 
-                    <button
-                        onClick={() => setCurrentStep(2)}
-                        className="w-full py-4 rounded-2xl text-slate-400 hover:text-slate-600 font-black text-xs uppercase tracking-widest transition-all"
-                    >
-                        Go Back
-                    </button>
+                        <div className="flex p-4 rounded-2xl bg-blue-500/5 border-2 border-blue-500/10 gap-4">
+                            <Info className="w-6 h-6 text-blue-500 shrink-0" />
+                            <p className="text-xs text-blue-700 dark:text-blue-300 font-bold leading-relaxed">
+                                Please double check the number. Data purchases are processed instantly and usually cannot be reversed.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={handlePayment}
+                            disabled={processing || !phoneNumber}
+                            className={cn(
+                                "w-full py-6 rounded-3xl font-black text-white shadow-2xl transition-all flex items-center justify-center gap-3 text-lg uppercase tracking-[0.2em]",
+                                config.color, config.color === 'bg-[#FFCC00]' ? 'text-black' : 'text-white',
+                                "hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            )}
+                        >
+                            {processing ? <Loader2 className="w-6 h-6 animate-spin" /> : <span>Complete Purchase</span>}
+                        </button>
+
+                        <button
+                            onClick={() => setCurrentStep(2)}
+                            className="w-full py-4 rounded-2xl text-slate-400 hover:text-slate-600 font-black text-xs uppercase tracking-widest transition-all"
+                        >
+                            Go Back
+                        </button>
+                    </div>
                 </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="min-h-screen pb-20 pt-4 sm:pt-8 bg-slate-50 dark:bg-black">
+            <div className="container mx-auto px-4 max-w-7xl">
+                {/* Dashboard Navigation */}
+                <div className="flex items-center justify-between mb-12">
+                    <button
+                        onClick={resetFlow}
+                        className="flex items-center gap-3 text-slate-500 hover:text-black dark:hover:text-white transition-all group"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex items-center justify-center group-hover:bg-slate-50">
+                            <ArrowLeft className="w-5 h-5" />
+                        </div>
+                        <span className="font-black text-xs uppercase tracking-widest">Back to Dashboard</span>
+                    </button>
+                    <div className="hidden lg:block">
+                        <StepIndicator />
+                    </div>
+                </div>
+
+                {/* Status Messages */}
+                {message && (
+                    <div className={cn(
+                        "max-w-xl mx-auto mb-8 p-6 rounded-3xl border-2 flex items-center gap-4 animate-in zoom-in slide-in-from-top-4 duration-500",
+                        message.type === 'success' ? "bg-blue-500/10 border-blue-500/20 text-blue-600" : "bg-red-500/10 border-red-500/20 text-red-600"
+                    )}>
+                        {message.type === 'success' ? <CheckCircle2 className="w-8 h-8 shrink-0" /> : <XCircle className="w-8 h-8 shrink-0" />}
+                        <p className="font-black tracking-tight">{message.text}</p>
+                    </div>
+                )}
+
+                {/* Main Views */}
+                {currentStep === 1 && <NetworkSelection />}
+                {currentStep === 2 && <BundleSelection />}
+                {currentStep === 3 && <PaymentView />}
             </div>
         </div>
     );
-};
-
-return (
-    <div className="min-h-screen pb-20 pt-4 sm:pt-8 bg-slate-50 dark:bg-black">
-        <div className="container mx-auto px-4 max-w-7xl">
-            {/* Dashboard Navigation */}
-            <div className="flex items-center justify-between mb-12">
-                <button
-                    onClick={resetFlow}
-                    className="flex items-center gap-3 text-slate-500 hover:text-black dark:hover:text-white transition-all group"
-                >
-                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex items-center justify-center group-hover:bg-slate-50">
-                        <ArrowLeft className="w-5 h-5" />
-                    </div>
-                    <span className="font-black text-xs uppercase tracking-widest">Back to Dashboard</span>
-                </button>
-                <div className="hidden lg:block">
-                    <StepIndicator />
-                </div>
-            </div>
-
-            {/* Status Messages */}
-            {message && (
-                <div className={cn(
-                    "max-w-xl mx-auto mb-8 p-6 rounded-3xl border-2 flex items-center gap-4 animate-in zoom-in slide-in-from-top-4 duration-500",
-                    message.type === 'success' ? "bg-blue-500/10 border-blue-500/20 text-blue-600" : "bg-red-500/10 border-red-500/20 text-red-600"
-                )}>
-                    {message.type === 'success' ? <CheckCircle2 className="w-8 h-8 shrink-0" /> : <XCircle className="w-8 h-8 shrink-0" />}
-                    <p className="font-black tracking-tight">{message.text}</p>
-                </div>
-            )}
-
-            {/* Main Views */}
-            {currentStep === 1 && <NetworkSelection />}
-            {currentStep === 2 && <BundleSelection />}
-            {currentStep === 3 && <PaymentView />}
-        </div>
-    </div>
-);
 };
 
 export default DataBundles;
