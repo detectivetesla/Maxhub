@@ -4,8 +4,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const authMiddleware = require('../middleware/auth');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+// Ensure JWT_SECRET is available
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
 
 router.get('/me', authMiddleware, async (req, res) => {
     try {
@@ -65,7 +66,7 @@ router.post('/login', async (req, res) => {
 
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET,
+            JWT_SECRET,
             { expiresIn: '24h' }
         );
 

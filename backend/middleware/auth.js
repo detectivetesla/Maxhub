@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+// Ensure JWT_SECRET is available
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
 
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -11,7 +12,7 @@ const authMiddleware = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
         next();
     } catch (error) {

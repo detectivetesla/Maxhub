@@ -2,7 +2,11 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
+
+// Load environment variables early
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+// Global fallback for JWT_SECRET
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
 
 const app = express();
 const server = http.createServer(app);
