@@ -159,6 +159,32 @@ CREATE TABLE IF NOT EXISTS settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- -----------------------------------------------------------------------------
+-- 8. DEPOSITS TABLE
+-- Dedicated table for tracking wallet deposits (Paystack payments)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS deposits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    amount DECIMAL(15, 2) NOT NULL,            -- Deposit amount in GHC
+    fee DECIMAL(15, 2) DEFAULT 0.00,           -- Transaction fee charged
+    net_amount DECIMAL(15, 2) NOT NULL,        -- Amount credited to wallet (amount - fee)
+    status TEXT DEFAULT 'pending',             -- pending, success, failed, abandoned
+    reference TEXT UNIQUE NOT NULL,            -- Paystack reference
+    paystack_reference TEXT,                   -- Paystack transaction reference
+    payment_channel TEXT,                      -- card, bank, ussd, mobile_money
+    currency TEXT DEFAULT 'GHS',               -- Currency code
+    paid_at TIMESTAMP WITH TIME ZONE,          -- When payment was confirmed
+    metadata JSONB DEFAULT '{}',               -- Additional Paystack data
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for deposit queries
+CREATE INDEX IF NOT EXISTS idx_deposits_user_id ON deposits(user_id);
+CREATE INDEX IF NOT EXISTS idx_deposits_status ON deposits(status);
+CREATE INDEX IF NOT EXISTS idx_deposits_reference ON deposits(reference);
+CREATE INDEX IF NOT EXISTS idx_deposits_created_at ON deposits(created_at DESC);
+
 -- =============================================================================
 -- DEFAULT DATA
 -- =============================================================================
