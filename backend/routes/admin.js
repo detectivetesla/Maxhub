@@ -4,6 +4,7 @@ const authMiddleware = require('../middleware/auth');
 const db = require('../db');
 const bcrypt = require('bcryptjs');
 const portal02Service = require('../services/portal02');
+const { logActivity } = require('../services/logger');
 
 // Admin Check Middleware
 const adminOnly = (req, res, next) => {
@@ -91,6 +92,15 @@ router.post('/users', authMiddleware, adminOnly, async (req, res) => {
             [email, full_name, hashedPassword, role, wallet_balance]
         );
         res.status(201).json({ message: 'User created successfully', user: result.rows[0] });
+
+        logActivity({
+            userId: req.user.id,
+            type: 'user',
+            level: 'success',
+            action: 'Admin Create User',
+            message: `Admin created user: ${email} (${role})`,
+            req
+        });
     } catch (error) {
         if (error.code === '23505') {
             return res.status(400).json({ message: 'Email already exists' });
@@ -157,6 +167,15 @@ router.delete('/users/:id', authMiddleware, adminOnly, async (req, res) => {
     try {
         await db.query('DELETE FROM users WHERE id = $1', [req.params.id]);
         res.json({ message: 'User deleted successfully' });
+
+        logActivity({
+            userId: req.user.id,
+            type: 'user',
+            level: 'warning',
+            action: 'Admin Delete User',
+            message: `Admin deleted user ID: ${req.params.id}`,
+            req
+        });
     } catch (error) {
         res.status(500).json({ message: 'Failed to delete user' });
     }
@@ -267,6 +286,15 @@ router.delete('/logs/purge', authMiddleware, adminOnly, async (req, res) => {
     try {
         await db.query('DELETE FROM activity_logs');
         res.json({ message: 'Logs purged successfully' });
+
+        logActivity({
+            userId: req.user.id,
+            type: 'system',
+            level: 'warning',
+            action: 'Purge Logs',
+            message: `Admin purged all activity logs`,
+            req
+        });
     } catch (error) {
         res.status(500).json({ message: 'Failed to purge logs' });
     }

@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const authMiddleware = require('../middleware/auth');
+const { logActivity } = require('../services/logger');
 
 // Ensure JWT_SECRET is available
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
@@ -49,6 +50,16 @@ router.post('/register', async (req, res) => {
             message: 'User registered successfully',
             user: result.rows[0]
         });
+
+        // Log the registration
+        logActivity({
+            userId: result.rows[0].id,
+            type: 'auth',
+            level: 'success',
+            action: 'User Registration',
+            message: `New user registered: ${email}`,
+            req
+        });
     } catch (error) {
         res.status(500).json({ message: 'Registration failed', error: error.message });
     }
@@ -79,6 +90,16 @@ router.post('/login', async (req, res) => {
                 walletBalance: user.wallet_balance,
                 role: user.role
             }
+        });
+
+        // Log the login
+        logActivity({
+            userId: user.id,
+            type: 'auth',
+            level: 'success',
+            action: 'User Login',
+            message: `User logged in: ${email}`,
+            req
         });
     } catch (error) {
         res.status(500).json({ message: 'Login failed', error: error.message });

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const db = require('../db');
+const { logActivity } = require('../services/logger');
 
 // Middleware to verify Paystack signature
 const verifyPaystackSignature = (req, res, next) => {
@@ -51,13 +52,20 @@ router.post('/paystack', verifyPaystackSignature, async (req, res) => {
                             [requestedAmount, userId]
                         );
 
-                        // Update transaction status
                         await client.query(
                             'UPDATE transactions SET status = $1 WHERE reference = $2',
                             ['success', reference]
                         );
 
                         await client.query('COMMIT');
+
+                        logActivity({
+                            userId,
+                            type: 'order',
+                            level: 'success',
+                            action: 'Payment Success',
+                            message: `Payment confirmed for transaction: ${reference}. Wallet credited with ${requestedAmount}`
+                        });
                     } catch (e) {
                         await client.query('ROLLBACK');
                         throw e;
@@ -94,6 +102,13 @@ router.post('/portal02', async (req, res) => {
                 'UPDATE transactions SET status = $1, metadata = metadata || $2 WHERE reference = $3 OR reference = $4',
                 [localStatus, JSON.stringify({ portal_order_id: orderId, portal_status: status }), reference, orderId]
             );
+
+            logActivity({
+                type: 'order',
+                level: localStatus === 'success' ? 'success' : (localStatus === 'failed' ? 'error' : 'info'),
+                action: 'Order Status Update',
+                message: `Portal02 Order ${reference} updated to ${status} (${localStatus})`
+            });
 
             // TODO: If failed/refunded, initiate a manual or automatic refund to wallet balance
             if (localStatus === 'failed') {
