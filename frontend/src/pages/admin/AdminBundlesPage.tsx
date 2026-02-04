@@ -90,7 +90,10 @@ const AdminBundlesPage: React.FC = () => {
         const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             b.network.toLowerCase().includes(searchTerm.toLowerCase()) ||
             b.data_amount.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesNetwork = networkFilter === 'All' || b.network === networkFilter;
+        // Handle AT/AirtelTigo matching
+        const matchesNetwork = networkFilter === 'All' ||
+            b.network === networkFilter ||
+            (networkFilter === 'AT' && (b.network === 'AirtelTigo' || b.network === 'AT'));
         return matchesSearch && matchesNetwork;
     });
 
