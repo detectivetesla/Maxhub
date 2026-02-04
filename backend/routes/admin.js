@@ -18,19 +18,12 @@ const adminOnly = (req, res, next) => {
 // Get System Stats
 router.get('/stats', authMiddleware, adminOnly, async (req, res) => {
     try {
-        const totalUsersResult = await db.query('SELECT COUNT(*) FROM users');
-
-        const todayOrdersResult = await db.query(
-            "SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND created_at >= CURRENT_DATE"
-        );
-
-        const todayRevenueResult = await db.query(
-            "SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success' AND created_at >= CURRENT_DATE"
-        );
-
-        const lifetimeRevenueResult = await db.query(
-            "SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success'"
-        );
+        const [totalUsersResult, todayOrdersResult, todayRevenueResult, lifetimeRevenueResult] = await Promise.all([
+            db.query('SELECT COUNT(*) FROM users'),
+            db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND created_at >= CURRENT_DATE"),
+            db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success' AND created_at >= CURRENT_DATE"),
+            db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success'")
+        ]);
 
         res.json({
             totalUsers: Number(totalUsersResult.rows[0].count),

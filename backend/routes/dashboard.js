@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const authMiddleware = require('../middleware/auth');
 const paystackService = require('../services/paystack');
+const portal02Service = require('../services/portal02');
 const CONFIG = require('../config/constants');
 
 // Initialize Deposit
@@ -50,29 +51,16 @@ router.get('/stats', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Wallet Balance
-        const balanceResult = await db.query('SELECT wallet_balance FROM users WHERE id = $1', [userId]);
+        const [balanceResult, totalOrdersResult, processingOrdersResult, completedOrdersResult] = await Promise.all([
+            db.query('SELECT wallet_balance FROM users WHERE id = $1', [userId]),
+            db.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase'", [userId]),
+            db.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase' AND status = 'processing'", [userId]),
+            db.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase' AND status = 'success'", [userId])
+        ]);
+
         const walletBalance = balanceResult.rows[0]?.wallet_balance || 0;
-
-        // Total Orders
-        const totalOrdersResult = await db.query(
-            "SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase'",
-            [userId]
-        );
         const totalOrders = totalOrdersResult.rows[0].count;
-
-        // Processing Orders
-        const processingOrdersResult = await db.query(
-            "SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase' AND status = 'processing'",
-            [userId]
-        );
         const processingOrders = processingOrdersResult.rows[0].count;
-
-        // Completed Orders
-        const completedOrdersResult = await db.query(
-            "SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase' AND status = 'success'",
-            [userId]
-        );
         const completedOrders = completedOrdersResult.rows[0].count;
 
         res.json({
@@ -203,6 +191,98 @@ router.get('/verify/:reference', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Verify Error:', error);
         res.status(500).json({ message: 'Failed to verify transaction', error: error.message });
+    }
+});
+
+// Purchase Data Bundle
+router.post('/purchase', authMiddleware, async (req, res) => {
+    const { bundleId, phoneNumber, isRecurring } = req.body;
+    const userId = req.user.id;
+
+    if (!bundleId || !phoneNumber) {
+        return res.status(400).json({ message: 'Bundle ID and Phone Number are required' });
+    }
+
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Fetch and Lock the User's row for atomic balance update
+        const userResult = await client.query('SELECT wallet_balance FROM users WHERE id = $1 FOR UPDATE', [userId]);
+        if (userResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const currentBalance = Number(userResult.rows[0].wallet_balance);
+
+        // 2. Fetch Bundle details
+        const bundleResult = await client.query('SELECT * FROM bundles WHERE id = $1', [bundleId]);
+        if (bundleResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Bundle not found' });
+        }
+
+        const bundle = bundleResult.rows[0];
+        const price = Number(bundle.price_ghc);
+
+        // 3. Validate Balance
+        if (currentBalance < price) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Insufficient wallet balance' });
+        }
+
+        // 4. Create Transaction Record (Debit)
+        const reference = `PUR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const metadata = {
+            bundle_name: bundle.name,
+            network: bundle.network,
+            is_recurring: isRecurring
+        };
+
+        await client.query(
+            'INSERT INTO transactions (user_id, type, purpose, amount, status, reference, bundle_id, recipient_phone, metadata, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+            [userId, 'debit', 'data_purchase', price, 'processing', reference, bundleId, phoneNumber, JSON.stringify(metadata), 'wallet']
+        );
+
+        // 5. Deduct Balance
+        await client.query(
+            'UPDATE users SET wallet_balance = wallet_balance - $1 WHERE id = $2',
+            [price, userId]
+        );
+
+        await client.query('COMMIT');
+
+        // 6. Async call to Portal02 (external provider)
+        // We do this AFTER committing our local transaction to ensure we don't hold the DB lock 
+        // while waiting for an external network request.
+        try {
+            const portalResult = await portal02Service.purchaseData(bundle.provider_code || bundle.id, phoneNumber);
+
+            // Log success for visibility
+            console.log(`Purchase initiated with provider: ${reference}`);
+
+            res.json({
+                message: 'Purchase initiated successfully',
+                reference,
+                providerResponse: portalResult
+            });
+        } catch (portalError) {
+            console.error('External Provider Error:', portalError.message);
+            // Even if portal02 fails to initiate, we've already deducted the balance and recorded the 'processing' state.
+            // The user/admin can verify/retry later.
+            res.status(202).json({
+                message: 'Purchase recorded, but encounterred delay in reaching provider. We will retry automatically.',
+                reference
+            });
+        }
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Purchase Error:', error);
+        res.status(500).json({ message: 'Transaction failed', error: error.message });
+    } finally {
+        client.release();
     }
 });
 

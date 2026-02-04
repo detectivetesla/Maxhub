@@ -163,16 +163,11 @@ const DataBundles: React.FC = () => {
                 return;
             }
 
-            let successCount = 0;
-            let errorCount = 0;
-            let errorMessages: string[] = [];
-
-            for (const recipient of filteredRecipients) {
+            // Parallel processing for high concurrency
+            const results = await Promise.all(filteredRecipients.map(async (recipient) => {
                 const bundle = allBundles.find(b => b.id === recipient.bundleId);
                 if (!bundle) {
-                    errorCount++;
-                    errorMessages.push(`Bundle not found for recipient ${recipient.phone}.`);
-                    continue;
+                    return { success: false, message: `Bundle not found for ${recipient.phone}` };
                 }
 
                 try {
@@ -181,13 +176,20 @@ const DataBundles: React.FC = () => {
                         phoneNumber: recipient.phone,
                         isRecurring
                     });
-                    successCount++;
+                    return { success: true };
                 } catch (err: any) {
                     console.error(`Error purchasing for ${recipient.phone}:`, err);
-                    errorCount++;
-                    errorMessages.push(`Failed for ${recipient.phone}: ${err.response?.data?.message || 'Unknown error'}`);
+                    return {
+                        success: false,
+                        message: `Failed for ${recipient.phone}: ${err.response?.data?.message || 'Unknown error'}`
+                    };
                 }
-            }
+            }));
+
+            const successCount = results.filter(r => r.success).length;
+            const failures = results.filter(r => !r.success);
+            const errorCount = failures.length;
+            const errorMessages = failures.map(f => f.message);
 
             if (successCount > 0) {
                 setMessage({
