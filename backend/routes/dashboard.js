@@ -118,4 +118,92 @@ router.get('/orders', authMiddleware, async (req, res) => {
     }
 });
 
+// Verify Transaction Status
+router.get('/verify/:reference', authMiddleware, async (req, res) => {
+    try {
+        const { reference } = req.params;
+        const userId = req.user.id;
+
+        // Fetch transaction from DB
+        const txResult = await db.query(
+            'SELECT * FROM transactions WHERE reference = $1 AND user_id = $2',
+            [reference, userId]
+        );
+
+        if (txResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        const transaction = txResult.rows[0];
+
+        // If already success or failed, no need to verify again with Paystack for logic, 
+        // but we might want to refresh UI state.
+        if (transaction.status !== 'processing') {
+            return res.json({
+                status: transaction.status,
+                message: `Transaction is already ${transaction.status}`
+            });
+        }
+
+        // Verify with Paystack
+        const paystackData = await paystackService.verifyTransaction(reference);
+        const newStatus = paystackData.status === 'success' ? 'success' :
+            (paystackData.status === 'failed' ? 'failed' : 'processing');
+
+        if (newStatus === 'success') {
+            // Use a transaction for consistency to avoid double-crediting
+            const client = await db.pool.connect();
+            try {
+                await client.query('BEGIN');
+
+                // Re-check status inside transaction
+                const checkTx = await client.query('SELECT status FROM transactions WHERE reference = $1 FOR UPDATE', [reference]);
+                if (checkTx.rows[0].status === 'success') {
+                    await client.query('COMMIT');
+                    return res.json({ status: 'success', message: 'Transaction already processed' });
+                }
+
+                // Update wallet
+                await client.query(
+                    'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2',
+                    [transaction.amount, userId]
+                );
+
+                // Update transaction status
+                await client.query(
+                    'UPDATE transactions SET status = $1 WHERE reference = $2',
+                    ['success', reference]
+                );
+
+                await client.query('COMMIT');
+            } catch (e) {
+                await client.query('ROLLBACK');
+                throw e;
+            } finally {
+                client.release();
+            }
+        } else if (newStatus === 'failed') {
+            await db.query(
+                'UPDATE transactions SET status = $1 WHERE reference = $2',
+                ['failed', reference]
+            );
+        } else if (paystackData.status === 'abandoned' || paystackData.status === 'cancelled') {
+            // If abandoned, mark as failed in our DB to stop showing as "processing"
+            await db.query(
+                'UPDATE transactions SET status = $1 WHERE reference = $2',
+                ['failed', reference]
+            );
+            return res.json({ status: 'failed', message: 'Transaction was abandoned' });
+        }
+
+        res.json({
+            status: newStatus === 'processing' && paystackData.status === 'abandoned' ? 'failed' : newStatus,
+            message: `Transaction status in Paystack: ${paystackData.status}`
+        });
+    } catch (error) {
+        console.error('Verify Error:', error);
+        res.status(500).json({ message: 'Failed to verify transaction', error: error.message });
+    }
+});
+
 module.exports = router;

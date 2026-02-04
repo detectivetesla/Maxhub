@@ -51,6 +51,22 @@ const Wallet: React.FC = () => {
         }
     };
 
+    const verifyTransaction = async (reference: string) => {
+        try {
+            setIsProcessing(true);
+            const response = await api.get(`/dashboard/verify/${reference}`);
+            alert(response.data.message);
+            // Refresh transactions list
+            const txResponse = await api.get('/dashboard/transactions');
+            setTransactions(txResponse.data.transactions);
+        } catch (error: any) {
+            console.error('Verification failed', error);
+            alert(error.response?.data?.message || 'Failed to verify transaction');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const fee = amount ? (Number(amount) * APP_CONFIG.TRANSACTION_FEE_PERCENTAGE).toFixed(2) : '0.00';
     const total = amount ? (Number(amount) + Number(fee)).toFixed(2) : '0.00';
 
@@ -194,6 +210,18 @@ const Wallet: React.FC = () => {
                                         )}>
                                             {item.status}
                                         </span>
+                                        {item.status === 'processing' && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    verifyTransaction(item.reference);
+                                                }}
+                                                className="text-[8px] font-black uppercase text-blue-500 hover:underline tracking-widest mt-1"
+                                                disabled={isProcessing}
+                                            >
+                                                {isProcessing ? 'Checking...' : 'Verify'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
