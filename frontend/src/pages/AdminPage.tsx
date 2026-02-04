@@ -156,7 +156,7 @@ const AdminPage: React.FC = () => {
                                 <h3 className="text-xl sm:text-2xl font-black text-white">Revenue Growth</h3>
                                 <p className="text-xs sm:text-sm text-slate-500 font-bold">Sales performance over the last 7 days</p>
                             </div>
-                            <div className="px-4 py-2 bg-blue-500/10 text-blue-500 rounded-xl border border-blue-500/20 text-[10px] font-black uppercase tracking-widest">
+                            <div className="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest">
                                 Live Data
                             </div>
                         </div>
@@ -167,8 +167,8 @@ const AdminPage: React.FC = () => {
                                     <AreaChart data={statsData.dailyRevenue}>
                                         <defs>
                                             <linearGradient id="adminRevenue" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                                                <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1E293B" />
@@ -192,12 +192,12 @@ const AdminPage: React.FC = () => {
                                                 fontWeight: 'bold',
                                                 color: '#fff'
                                             }}
-                                            itemStyle={{ color: '#3B82F6' }}
+                                            itemStyle={{ color: '#10B981' }}
                                         />
                                         <Area
                                             type="monotone"
                                             dataKey="revenue"
-                                            stroke="#3B82F6"
+                                            stroke="#10B981"
                                             strokeWidth={4}
                                             fillOpacity={1}
                                             fill="url(#adminRevenue)"
