@@ -536,23 +536,20 @@ const DataBundles: React.FC = () => {
                         <div
                             key={bundle.id}
                             className={cn(
-                                'relative p-6 rounded-[1.5rem] bg-[#0B0F19] border-2 transition-all text-left group flex flex-col',
-                                'hover:shadow-2xl active:scale-[0.98]',
-                                config.borderColor.replace('border-', 'border-').replace('border-[#FFCC00]', 'border-[#FFCC00]/20').replace('border-[#E60000]', 'border-[#E60000]/20').replace('border-[#003876]', 'border-[#003876]/20')
+                                'relative p-6 rounded-[2rem] border-2 transition-all text-left group flex flex-col',
+                                'hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]',
+                                'bg-white dark:bg-slate-900',
+                                config.borderColor,
+                                "border-opacity-20 hover:border-opacity-100"
                             )}
                         >
                             <div className="flex justify-between items-start mb-6">
-                                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-white/5")}>
-                                    <Zap className={cn("w-5 h-5", config.textColor)} />
+                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", config.color, "bg-opacity-10")}>
+                                    <Zap className={cn("w-6 h-6", config.textColor)} />
                                 </div>
-                                <div className="flex flex-col items-end">
-                                    <div className="flex flex-col items-end leading-none">
-                                        <div className="px-2 py-0.5 rounded-sm bg-blue-500/20 text-blue-500 text-[8px] font-black tracking-tighter mb-1">
-                                            AGENT PRICE
-                                        </div>
-                                        <div className="text-white/40 text-[8px] font-black mr-1">PRICE</div>
-                                    </div>
-                                    <div className={cn('text-xl font-black mt-1', config.textColor)}>
+                                <div className="text-right">
+                                    <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">Price</div>
+                                    <div className={cn('text-2xl font-black tracking-tight', config.textColor)}>
                                         GH₵ {bundle.price.toFixed(2)}
                                     </div>
                                 </div>
@@ -560,23 +557,23 @@ const DataBundles: React.FC = () => {
 
                             <div className="flex-1 mb-8">
                                 <div className="flex items-baseline gap-2 mb-2">
-                                    <h4 className="text-5xl font-black text-white tracking-tighter leading-none">
+                                    <h4 className="text-5xl font-black text-black dark:text-white tracking-tighter leading-none">
                                         {bundle.data.split(' ')[0]}<span className="text-4xl">{bundle.data.split(' ')[1] || ''}</span>
                                     </h4>
-                                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">{selectedNetwork}</span>
+                                    <span className={cn("text-[10px] font-black uppercase tracking-widest", config.textColor)}>{selectedNetwork}</span>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">{bundle.validity}</span>
-                                    <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">RELIABLE</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="px-2 py-1 rounded bg-slate-100 dark:bg-white/5 text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{bundle.validity}</div>
+                                    <div className="px-2 py-1 rounded bg-green-500/10 text-[9px] font-black text-green-600 uppercase tracking-widest">Reliable</div>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => handleBundleSelect(bundle)}
                                 className={cn(
-                                    "w-full py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg",
+                                    "w-full py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-lg",
                                     config.buttonColor,
-                                    "hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                                    "hover:shadow-2xl active:scale-[0.95]"
                                 )}
                             >
                                 Select Plan
