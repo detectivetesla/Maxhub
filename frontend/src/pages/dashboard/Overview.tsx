@@ -83,8 +83,8 @@ const Overview: React.FC = () => {
     }, []);
 
     const statCards = [
-        { label: 'Wallet Balance', value: `GH₵ ${stats.walletBalance.toLocaleString()}`, icon: Wallet, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/10', iconBg: 'bg-orange-500', trend: '+0.0%', path: '/dashboard/wallet' },
-        { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10', iconBg: 'bg-blue-500', trend: '+0', path: '/dashboard/orders' },
+        { label: 'Wallet Balance', value: `GH₵ ${stats.walletBalance.toLocaleString()}`, icon: Wallet, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500/10', iconBg: 'bg-emerald-500', trend: '+0.0%', path: '/dashboard/wallet' },
+        { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500/10', iconBg: 'bg-orange-500', trend: '+0', path: '/dashboard/orders' },
         { label: 'Processing Orders', value: stats.processingOrders.toString(), icon: Clock, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-500/10', iconBg: 'bg-blue-500', trend: '0', path: '/dashboard/orders?status=processing' },
         { label: 'Completed Orders', value: stats.completedOrders.toString(), icon: CheckCircle2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-500/10', iconBg: 'bg-purple-500', trend: '+0', path: '/dashboard/orders?status=completed' },
     ];

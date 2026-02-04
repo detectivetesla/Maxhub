@@ -46,7 +46,7 @@ const AdminPage: React.FC = () => {
 
     const stats = [
         { label: 'TOTAL USERS', value: statsData.totalUsers.toString(), icon: Users, color: 'text-purple-600', bg: 'bg-purple-600', border: 'border-purple-400/50', path: '/admin/users' },
-        { label: "TODAY'S ORDERS", value: statsData.todayOrders.toString(), icon: Database, color: 'text-emerald-600', bg: 'bg-emerald-600', border: 'border-emerald-400/50', path: '/admin/orders' },
+        { label: "TODAY'S ORDERS", value: statsData.todayOrders.toString(), icon: Database, color: 'text-orange-600', bg: 'bg-orange-500', border: 'border-orange-400/50', path: '/admin/orders' },
         { label: "TODAY'S REVENUE", value: `GH₵ ${statsData.todayRevenue.toLocaleString()}`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-500', border: 'border-amber-300/50', path: '/admin/analytics' },
         { label: 'LIFETIME REVENUE', value: `GH₵ ${statsData.lifetimeRevenue.toLocaleString()}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-600', border: 'border-blue-400/50', isPrimary: true, path: '/admin/analytics' },
     ];
