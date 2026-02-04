@@ -63,7 +63,7 @@ const AdminSettingsPage: React.FC = () => {
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
-            <header className="flex items-center justify-between gap-6">
+            <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center">
@@ -71,7 +71,7 @@ const AdminSettingsPage: React.FC = () => {
                         </div>
                         <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">System Control</h1>
                     </div>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] ml-14">Master Configuration Engine</p>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] sm:ml-14">Master Configuration Engine</p>
                 </div>
                 {message && (
                     <div className={cn(
@@ -86,7 +86,7 @@ const AdminSettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Left Side - Settings Categories */}
                 <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[3rem] p-10 space-y-8 shadow-sm h-full relative overflow-hidden group">
+                    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-6 sm:space-y-8 shadow-sm h-full relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 group-hover:rotate-[24deg] transition-transform duration-700">
                             <Monitor className="w-64 h-64 text-slate-400" />
                         </div>
@@ -125,7 +125,7 @@ const AdminSettingsPage: React.FC = () => {
                 {/* Right Side - Settings Panels */}
                 <div className="lg:col-span-8 space-y-8">
                     {/* Critical Controls */}
-                    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[3rem] p-10 space-y-10 shadow-sm relative overflow-hidden group">
+                    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-8 sm:space-y-10 shadow-sm relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:rotate-12 transition-transform duration-500">
                             <Power className="w-32 h-32" />
                         </div>
@@ -227,10 +227,10 @@ const AdminSettingsPage: React.FC = () => {
                     </div>
 
                     {/* Operational Settings */}
-                    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[3rem] p-10 space-y-8 shadow-sm">
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Operation Engine</h2>
+                    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-6 sm:space-y-8 shadow-sm">
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Operation Engine</h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {[
                                 { label: 'Webhooks', icon: Activity, status: 'Active' },
                                 { icon: Database, label: 'Backup Engine', status: 'Healthy' },

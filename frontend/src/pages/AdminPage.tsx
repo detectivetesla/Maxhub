@@ -54,20 +54,20 @@ const AdminPage: React.FC = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Welcome Hero Section */}
-            <div className="bg-blue-600 border border-white/5 rounded-[2rem] p-8 sm:p-12 relative overflow-hidden group shadow-2xl shadow-blue-500/20">
+            <div className="bg-blue-600 border border-white/5 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 md:p-12 relative overflow-hidden group shadow-2xl shadow-blue-500/20">
                 <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000">
-                    <LayoutGrid className="w-64 h-64 text-white" />
+                    <LayoutGrid className="w-32 sm:w-64 h-32 sm:h-64 text-white" />
                 </div>
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight mb-3 sm:mb-4">
                             Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'}!
                         </h1>
-                        <p className="text-slate-200 font-bold max-w-xl text-lg leading-relaxed">
+                        <p className="text-slate-200 font-bold max-w-xl text-sm sm:text-base md:text-lg leading-relaxed">
                             Your platform analytics and system controls are ready. Here's a summary of today's performance.
                         </p>
                     </div>
-                    <button className="px-8 py-4 rounded-2xl border border-white/10 text-white font-black text-sm hover:bg-white hover:text-slate-900 transition-all shadow-2xl">
+                    <button className="px-6 sm:px-8 py-3 sm:py-4 rounded-2xl border border-white/10 text-white font-black text-xs sm:text-sm hover:bg-white hover:text-slate-900 transition-all shadow-2xl shrink-0">
                         View Analytics
                     </button>
                 </div>
@@ -102,7 +102,7 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {stats.map((stat) => (
                     <Link
                         key={stat.label}
@@ -120,13 +120,13 @@ const AdminPage: React.FC = () => {
                                 <div className="h-8 w-3/4 bg-white/30 rounded" />
                             </div>
                         ) : (
-                            <div className="flex items-center gap-4 relative z-10">
-                                <div className={cn("p-3 rounded-xl bg-white border border-white/20 shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center")}>
-                                    <stat.icon className={cn("w-5 h-5", stat.color)} />
+                            <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                                <div className={cn("p-2 sm:p-3 rounded-lg sm:rounded-xl bg-white border border-white/20 shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center shrink-0")}>
+                                    <stat.icon className={cn("w-4 h-4 sm:w-5 sm:h-5", stat.color)} />
                                 </div>
-                                <div className="flex flex-col">
-                                    <h3 className="text-2xl font-black text-white">{stat.value}</h3>
-                                    <p className="text-[10px] font-black text-white/90 uppercase tracking-widest leading-none mt-1">{stat.label}</p>
+                                <div className="flex flex-col min-w-0">
+                                    <h3 className="text-lg sm:text-2xl font-black text-white truncate">{stat.value}</h3>
+                                    <p className="text-[9px] sm:text-[10px] font-black text-white/90 uppercase tracking-widest leading-none mt-1 truncate">{stat.label}</p>
                                 </div>
                             </div>
                         )}
@@ -141,15 +141,15 @@ const AdminPage: React.FC = () => {
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 {/* Recent Orders Table */}
-                <div className="xl:col-span-2 bg-[#0B0F19] border border-white/5 rounded-[2rem] p-8 overflow-hidden">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-black text-white">Recent Orders</h2>
-                        <Link to="/admin/orders" className="px-4 py-2 rounded-lg bg-blue-500 text-white font-black text-xs hover:scale-105 active:scale-95 transition-all">
+                <div className="xl:col-span-2 bg-[#0B0F19] border border-white/5 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 md:p-8 overflow-hidden">
+                    <div className="flex items-center justify-between mb-6 sm:mb-8">
+                        <h2 className="text-lg sm:text-2xl font-black text-white">Recent Orders</h2>
+                        <Link to="/admin/orders" className="px-3 sm:px-4 py-2 rounded-lg bg-blue-500 text-white font-black text-xs hover:scale-105 active:scale-95 transition-all">
                             See all →
                         </Link>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto -mx-1">
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-white/5">
@@ -194,10 +194,10 @@ const AdminPage: React.FC = () => {
                 </div>
 
                 {/* New Users List */}
-                <div className="bg-[#0B0F19] border border-white/5 rounded-[2rem] p-8 overflow-hidden">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-black text-white">New Users</h2>
-                        <Link to="/admin/users" className="px-4 py-2 rounded-lg bg-blue-500 text-white font-black text-xs hover:scale-105 active:scale-95 transition-all">
+                <div className="bg-[#0B0F19] border border-white/5 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 md:p-8 overflow-hidden">
+                    <div className="flex items-center justify-between mb-6 sm:mb-8">
+                        <h2 className="text-lg sm:text-2xl font-black text-white">New Users</h2>
+                        <Link to="/admin/users" className="px-3 sm:px-4 py-2 rounded-lg bg-blue-500 text-white font-black text-xs hover:scale-105 active:scale-95 transition-all">
                             See all →
                         </Link>
                     </div>

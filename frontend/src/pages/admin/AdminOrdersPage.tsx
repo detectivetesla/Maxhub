@@ -82,20 +82,20 @@ const AdminOrdersPage: React.FC = () => {
             </header>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {[
                     { label: 'Total Orders', value: orders.length.toString(), icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-600' },
                     { label: 'Successful', value: orders.filter(o => o.status === 'success').length.toString(), icon: CheckCircle2, color: 'text-blue-600', bg: 'bg-blue-600' },
                     { label: 'Processing', value: orders.filter(o => o.status === 'processing').length.toString(), icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500' },
                     { label: 'Failed', value: orders.filter(o => o.status === 'failed').length.toString(), icon: XCircle, color: 'text-red-600', bg: 'bg-red-600' },
                 ].map((stat) => (
-                    <div key={stat.label} className={cn("border-2 p-6 rounded-[2rem] flex items-center justify-between shadow-lg transition-all hover:scale-105 group", stat.bg, "border-white/10")}>
-                        <div>
-                            <p className="text-[10px] font-black uppercase text-white/90 tracking-widest">{stat.label}</p>
-                            <p className="text-2xl font-black text-white mt-1">{stat.value}</p>
+                    <div key={stat.label} className={cn("border-2 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-between shadow-lg transition-all hover:scale-105 group", stat.bg, "border-white/10")}>
+                        <div className="min-w-0">
+                            <p className="text-[9px] sm:text-[10px] font-black uppercase text-white/90 tracking-widest truncate">{stat.label}</p>
+                            <p className="text-lg sm:text-2xl font-black text-white mt-1">{stat.value}</p>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                            <stat.icon className={cn("w-6 h-6", stat.color)} />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
+                            <stat.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", stat.color)} />
                         </div>
                     </div>
                 ))}
@@ -199,12 +199,12 @@ const AdminOrdersPage: React.FC = () => {
                     </table>
                 </div>
 
-                <div className="p-8 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02] flex items-center justify-between">
+                <div className="p-4 sm:p-8 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02] flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Record Count: {filteredOrders.length}</p>
                     <div className="flex items-center gap-2">
-                        <button className="px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">Previous</button>
-                        <button className="px-4 py-2 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/10">1</button>
-                        <button className="px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">Next</button>
+                        <button className="px-3 sm:px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">Previous</button>
+                        <button className="px-3 sm:px-4 py-2 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/10">1</button>
+                        <button className="px-3 sm:px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">Next</button>
                     </div>
                 </div>
             </div>

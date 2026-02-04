@@ -104,8 +104,8 @@ const AdminUsersPage: React.FC = () => {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">User Directory</h1>
-                    <p className="text-slate-500 font-bold mt-1">Manage system administrators and customers.</p>
+                    <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">User Directory</h1>
+                    <p className="text-slate-500 font-bold mt-1 text-sm sm:text-base">Manage system administrators and customers.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                     <button className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 font-bold text-sm hover:bg-slate-100 transition-all">
@@ -146,8 +146,8 @@ const AdminUsersPage: React.FC = () => {
             </div>
 
             {/* Users Table */}
-            <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[3rem] overflow-hidden shadow-sm">
-                <div className="overflow-x-auto overflow-y-hidden">
+            <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-sm">
+                <div className="overflow-x-auto overflow-y-hidden -mx-0.5">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5">
@@ -257,12 +257,12 @@ const AdminUsersPage: React.FC = () => {
 
             {/* CRUD Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
-                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0B0F19] rounded-[3rem] p-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-white/5">
-                        <header className="flex items-center justify-between mb-10">
+                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0B0F19] rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-white/5 max-h-[90vh] overflow-y-auto">
+                        <header className="flex items-center justify-between mb-6 sm:mb-10">
                             <div>
-                                <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                                <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                                     {editingUser ? 'Update Participant' : 'Board New Participant'}
                                 </h2>
                                 <p className="text-slate-500 font-bold mt-1 uppercase tracking-widest text-[10px]">Registry Form</p>

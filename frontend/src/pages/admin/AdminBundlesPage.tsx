@@ -102,8 +102,8 @@ const AdminBundlesPage: React.FC = () => {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Data Inventory</h1>
-                    <p className="text-slate-500 font-bold mt-1">Configure network packages and price points.</p>
+                    <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Data Inventory</h1>
+                    <p className="text-slate-500 font-bold mt-1 text-sm sm:text-base">Configure network packages and price points.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                     <button className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 font-bold text-sm hover:bg-slate-50 transition-all">
@@ -121,7 +121,7 @@ const AdminBundlesPage: React.FC = () => {
             </div>
 
             {/* Controls Bar */}
-            <div className="bg-white/80 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-4 rounded-[2rem] flex flex-col md:flex-row gap-4 items-center shadow-sm backdrop-blur-xl">
+            <div className="bg-white/80 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] flex flex-col md:flex-row gap-3 sm:gap-4 items-center shadow-sm backdrop-blur-xl">
                 <div className="relative flex-1 w-full group">
                     <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 dark:group-focus-within:text-white transition-colors" />
                     <input
@@ -151,10 +151,10 @@ const AdminBundlesPage: React.FC = () => {
             </div>
 
             {/* Bundles Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
                 {loading ? (
                     [1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="h-64 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[2.5rem] animate-pulse" />
+                        <div key={i} className="h-48 sm:h-64 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[1.5rem] sm:rounded-[2.5rem] animate-pulse" />
                     ))
                 ) : filteredBundles.length === 0 ? (
                     <div className="col-span-full py-32 flex flex-col items-center gap-4 opacity-20">
@@ -267,12 +267,12 @@ const AdminBundlesPage: React.FC = () => {
 
             {/* Bundle Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
-                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0B0F19] rounded-[3rem] p-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-white/5">
-                        <header className="flex items-center justify-between mb-10">
+                    <div className="relative w-full max-w-xl bg-white dark:bg-[#0B0F19] rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-white/5 max-h-[90vh] overflow-y-auto">
+                        <header className="flex items-center justify-between mb-6 sm:mb-10">
                             <div>
-                                <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                                <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                                     {editingBundle ? 'Modify Bundle' : 'New Bundle Config'}
                                 </h2>
                                 <p className="text-slate-500 font-bold mt-1 uppercase tracking-widest text-[10px]">Inventory Specifications</p>
