@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -18,6 +18,8 @@ import {
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import api from '@/utils/api';
+import { supabase } from '@/utils/supabase';
 
 interface SidebarProps {
     className?: string;
@@ -28,13 +30,56 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ className, onClose, isCollapsed }) => {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const [processingCount, setProcessingCount] = useState<number>(0);
 
-    const menuItems: { icon: any, label: string, path: string, color: string, bgColor: string, badge?: string, end?: boolean }[] = [
+    const fetchStats = async () => {
+        try {
+            const response = await api.get('/dashboard/stats');
+            setProcessingCount(response.data.processingOrders || 0);
+        } catch (error) {
+            console.error('Failed to fetch sidebar stats:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchStats();
+
+        // Real-time updates via Supabase
+        let channel: any = null;
+        if (supabase && user) {
+            channel = supabase
+                .channel('user-sidebar-updates')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'transactions',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    () => fetchStats()
+                )
+                .subscribe();
+        }
+
+        return () => {
+            if (channel) supabase?.removeChannel(channel);
+        };
+    }, [user?.id]);
+
+    const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', end: true, color: 'text-blue-600 dark:text-blue-500', bgColor: 'bg-blue-500/20' },
         { icon: Wallet, label: 'Wallet', path: '/dashboard/wallet', color: 'text-orange-600 dark:text-orange-500', bgColor: 'bg-orange-500/20' },
         { icon: Download, label: 'Deposits', path: '/dashboard/deposits', color: 'text-blue-600 dark:text-blue-500', bgColor: 'bg-blue-500/20' },
         { icon: Database, label: 'Data Bundles', path: '/dashboard/data-bundles', color: 'text-primary', bgColor: 'bg-primary/20' },
-        { icon: ShoppingBag, label: 'Orders', path: '/dashboard/orders', badge: '3', color: 'text-purple-600 dark:text-purple-500', bgColor: 'bg-purple-500/20' },
+        {
+            icon: ShoppingBag,
+            label: 'Orders',
+            path: '/dashboard/orders',
+            badge: processingCount > 0 ? processingCount.toString() : undefined,
+            color: 'text-purple-600 dark:text-purple-500',
+            bgColor: 'bg-purple-500/20'
+        },
         { icon: ArrowLeftRight, label: 'Transactions', path: '/dashboard/transactions', color: 'text-amber-600 dark:text-amber-500', bgColor: 'bg-orange-500/20' },
     ];
 

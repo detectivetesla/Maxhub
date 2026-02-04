@@ -20,18 +20,20 @@ const adminOnly = (req, res, next) => {
 // Get System Stats
 router.get('/stats', authMiddleware, adminOnly, async (req, res) => {
     try {
-        const [totalUsersResult, todayOrdersResult, todayRevenueResult, lifetimeRevenueResult] = await Promise.all([
+        const [totalUsersResult, todayOrdersResult, todayRevenueResult, lifetimeRevenueResult, pendingOrdersResult] = await Promise.all([
             db.query('SELECT COUNT(*) FROM users'),
             db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND created_at >= CURRENT_DATE"),
             db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success' AND created_at >= CURRENT_DATE"),
-            db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success'")
+            db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success'"),
+            db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status = 'processing'")
         ]);
 
         res.json({
             totalUsers: Number(totalUsersResult.rows[0].count),
             todayOrders: Number(todayOrdersResult.rows[0].count),
             todayRevenue: Number(todayRevenueResult.rows[0].sum || 0),
-            lifetimeRevenue: Number(lifetimeRevenueResult.rows[0].sum || 0)
+            lifetimeRevenue: Number(lifetimeRevenueResult.rows[0].sum || 0),
+            pendingOrders: Number(pendingOrdersResult.rows[0].count)
         });
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch admin stats', error: error.message });

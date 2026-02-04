@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import {
     LayoutGrid, Users, Database, Terminal,
@@ -9,6 +9,8 @@ import {
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/config/constants';
+import api from '@/utils/api';
+import { supabase } from '@/utils/supabase';
 
 interface AdminSidebarProps {
     className?: string;
@@ -16,7 +18,43 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) => {
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
+    const [pendingCount, setPendingCount] = useState<number>(0);
+
+    const fetchPendingCount = async () => {
+        try {
+            const response = await api.get('/admin/stats');
+            // I will update the backend to return pendingOrders count
+            setPendingCount(response.data.pendingOrders || 0);
+        } catch (error) {
+            console.error('Failed to fetch admin pending count:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchPendingCount();
+
+        // Real-time updates via Supabase
+        let channel: any = null;
+        if (supabase) {
+            channel = supabase
+                .channel('admin-sidebar-updates')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'transactions'
+                    },
+                    () => fetchPendingCount()
+                )
+                .subscribe();
+        }
+
+        return () => {
+            if (channel) supabase?.removeChannel(channel);
+        };
+    }, []);
 
     const sections = [
         {
@@ -30,7 +68,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
             title: 'Management',
             items: [
                 { icon: Users, label: 'Users', path: '/admin/users', color: 'text-blue-500' },
-                { icon: ShoppingBag, label: 'Orders', path: '/admin/orders', color: 'text-orange-500' },
+                {
+                    icon: ShoppingBag,
+                    label: 'Orders',
+                    path: '/admin/orders',
+                    color: 'text-orange-500',
+                    badge: pendingCount > 0 ? pendingCount.toString() : undefined
+                },
                 { icon: Database, label: 'Data Plans', path: '/admin/bundles', color: 'text-blue-500' },
             ]
         },
@@ -113,7 +157,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
                                             <item.icon className={isCollapsed ? "w-6 h-6" : "w-4 h-4"} />
                                         </div>
                                         {!isCollapsed && <span className="text-sm font-bold tracking-tight">{item.label}</span>}
-                                        {isItemActive && !isCollapsed && (
+                                        {(item as any).badge && !isCollapsed && (
+                                            <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                                                {(item as any).badge}
+                                            </span>
+                                        )}
+                                        {(item as any).badge && isCollapsed && (
+                                            <span className="absolute top-1 right-1 w-4 h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[8px] font-bold">
+                                                {(item as any).badge}
+                                            </span>
+                                        )}
+                                        {isItemActive && !isCollapsed && !(item as any).badge && (
                                             <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                                         )}
                                     </>
