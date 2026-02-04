@@ -300,10 +300,11 @@ const AdminUsersPage: React.FC = () => {
                                     <select
                                         name="role"
                                         defaultValue={editingUser?.role || 'customer'}
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-primary/50 outline-none transition-all font-bold appearance-none"
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-primary/50 outline-none transition-all font-bold appearance-none text-slate-900 dark:text-white cursor-pointer"
+                                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.5em 1.5em' }}
                                     >
-                                        <option value="customer">{APP_CONFIG.ROLES.customer}</option>
-                                        <option value="admin">{APP_CONFIG.ROLES.admin}</option>
+                                        <option value="customer" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{APP_CONFIG.ROLES.customer}</option>
+                                        <option value="admin" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{APP_CONFIG.ROLES.admin}</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">

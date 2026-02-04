@@ -65,7 +65,12 @@ const AdminBundlesPage: React.FC = () => {
     const handleSaveBundle = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data = Object.fromEntries(formData.entries());
+        const data: Record<string, any> = Object.fromEntries(formData.entries());
+
+        // Preserve is_active status when editing
+        if (editingBundle) {
+            data.is_active = editingBundle.is_active;
+        }
 
         try {
             if (editingBundle) {
@@ -74,6 +79,7 @@ const AdminBundlesPage: React.FC = () => {
                 await api.post('/admin/bundles', data);
             }
             setIsModalOpen(false);
+            setEditingBundle(null);
             fetchBundles();
         } catch (error) {
             alert('Failed to save bundle');
@@ -250,24 +256,24 @@ const AdminBundlesPage: React.FC = () => {
                                     <select
                                         name="network"
                                         defaultValue={editingBundle?.network || 'MTN'}
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-blue-500/50 outline-none transition-all font-bold appearance-none"
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-blue-500/50 outline-none transition-all font-bold appearance-none text-slate-900 dark:text-white cursor-pointer"
+                                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.5em 1.5em' }}
                                     >
-                                        <option value="MTN">MTN Network</option>
-                                        <option value="Telecel">Telecel Ghana</option>
-                                        <option value="AT">AT Network</option>
+                                        <option value="MTN" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">MTN Network</option>
+                                        <option value="Telecel" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Telecel Ghana</option>
+                                        <option value="AirtelTigo" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">AirtelTigo</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Data Amount</label>
-                                    <select
+                                    <input
                                         name="data_amount"
-                                        defaultValue={editingBundle?.data_amount || '1GB'}
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold appearance-none"
-                                    >
-                                        {['500MB', '1GB', '2GB', '3GB', '5GB', '10GB', '20GB', '50GB', '100GB'].map(size => (
-                                            <option key={size} value={size}>{size}</option>
-                                        ))}
-                                    </select>
+                                        type="text"
+                                        defaultValue={editingBundle?.data_amount || ''}
+                                        placeholder="e.g., 2GB, 500MB, 10GB"
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-400"
+                                        required
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Customer Price (GH₵)</label>
@@ -292,7 +298,17 @@ const AdminBundlesPage: React.FC = () => {
                                         required
                                     />
                                 </div>
-                                <input type="hidden" name="name" value={editingBundle?.name || 'Standard Plan'} />
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Bundle Name</label>
+                                    <input
+                                        name="name"
+                                        type="text"
+                                        defaultValue={editingBundle?.name || ''}
+                                        placeholder="e.g., MTN 2GB Monthly"
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-400"
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <button
