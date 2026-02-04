@@ -256,34 +256,27 @@ router.post('/purchase', authMiddleware, async (req, res) => {
         // 6. Async call to Portal02 (external provider)
         // We do this AFTER committing our local transaction to ensure we don't hold the DB lock 
         // while waiting for an external network request.
-        try {
-            const portalResult = await portal02Service.purchaseData(bundle.provider_code || bundle.id, phoneNumber);
+    } catch (portalError) {
+        console.error('External Provider Error:', portalError.message);
 
-            // Log success for visibility
-            console.log(`Purchase initiated with provider: ${reference}`);
-
-            res.json({
-                message: 'Purchase initiated successfully',
-                reference,
-                providerResponse: portalResult
-            });
-        } catch (portalError) {
-            console.error('External Provider Error:', portalError.message);
-            // Even if portal02 fails to initiate, we've already deducted the balance and recorded the 'processing' state.
-            // The user/admin can verify/retry later.
-            res.status(202).json({
-                message: 'Purchase recorded, but encounterred delay in reaching provider. We will retry automatically.',
-                reference
-            });
+        let userMessage = 'Purchase recorded, but encounterred delay in reaching provider. We will retry automatically.';
+        if (portalError.type === 'INSUFFICIENT_BALANCE') {
+            userMessage = 'Our main system is currently being restocked. Your order is pending and will be processed shortly.';
         }
 
-    } catch (error) {
-        await client.query('ROLLBACK');
-        console.error('Purchase Error:', error);
-        res.status(500).json({ message: 'Transaction failed', error: error.message });
-    } finally {
-        client.release();
+        res.status(202).json({
+            message: userMessage,
+            reference
+        });
     }
+
+} catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Purchase Error:', error);
+    res.status(500).json({ message: 'Transaction failed', error: error.message });
+} finally {
+    client.release();
+}
 });
 
 module.exports = router;

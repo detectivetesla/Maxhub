@@ -14,9 +14,16 @@ const portal02Service = {
             const response = await axios.get(`${PORTAL02_BASE_URL}/offers`, {
                 headers: { 'Authorization': `Bearer ${PORTAL02_API_KEY}` }
             });
-            return response.data.offers; // Extracted based on official documentation
+            return response.data.offers;
         } catch (error) {
-            console.error('Portal02 Sync Error:', error.response?.data || error.message);
+            const providerError = error.response?.data;
+            if (providerError && providerError.success === false) {
+                console.error(`Portal02 Sync Error [${providerError.type}]: ${providerError.error}`);
+                const err = new Error(providerError.error);
+                err.type = providerError.type;
+                throw err;
+            }
+            console.error('Portal02 Sync Error:', error.message);
             throw error;
         }
     },
@@ -31,11 +38,18 @@ const portal02Service = {
                 phone: phoneNumber,
                 callback_url: `${process.env.BACKEND_URL}/webhooks/portal02`
             }, {
-                headers: { 'Authorization': `Bearer ${process.env.PORTAL02_API_KEY}` }
+                headers: { 'Authorization': `Bearer ${PORTAL02_API_KEY}` }
             });
-            return response.data; // Expected: delivery status and reference
+            return response.data;
         } catch (error) {
-            console.error('Portal02 Purchase Error:', error.response?.data || error.message);
+            const providerError = error.response?.data;
+            if (providerError && providerError.success === false) {
+                console.error(`Portal02 Error [${providerError.type}]: ${providerError.error}`);
+                const err = new Error(providerError.error);
+                err.type = providerError.type;
+                throw err;
+            }
+            console.error('Portal02 Purchase Error:', error.message);
             throw error;
         }
     }
