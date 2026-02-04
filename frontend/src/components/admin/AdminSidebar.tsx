@@ -60,12 +60,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
 
     return (
         <aside className={cn(
-            "bg-white dark:bg-[#0B0F19] border-r border-slate-100 dark:border-white/5 flex flex-col fixed inset-y-0 z-[70] transition-all duration-300",
+            "bg-white dark:bg-[#0B0F19] border-r border-slate-100 dark:border-white/5 flex flex-col fixed inset-y-0 z-[70] transition-all duration-300 h-screen overflow-hidden",
             isCollapsed ? "w-24" : "w-72",
             className
         )}>
             {/* Branding Section */}
-            <div className={cn("p-8 pb-4 transition-all", isCollapsed && "p-6 flex justify-center")}>
+            <div className={cn("p-8 pb-4 transition-all shrink-0", isCollapsed && "p-6 flex justify-center")}>
                 <Link to="/admin" className="flex items-center gap-3 group">
                     <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shadow-2xl shadow-black/20 group-hover:scale-110 transition-transform">
                         <Shield className="w-6 h-6 text-blue-500" />
@@ -125,7 +125,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
             </nav>
 
             {/* Bottom Utility Section */}
-            <div className={cn("p-8 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4", isCollapsed && "p-6 flex flex-col items-center")}>
+            <div className={cn("p-8 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4 shrink-0", isCollapsed && "p-6 flex flex-col items-center")}>
                 <Link
                     to="/dashboard"
                     title={isCollapsed ? "User Dashboard" : undefined}

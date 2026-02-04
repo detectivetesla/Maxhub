@@ -40,11 +40,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose, isCollapsed }) =>
 
     return (
         <aside className={cn(
-            "flex flex-col h-full bg-white dark:bg-[#0B0F19] transition-all duration-300 ease-in-out border-r lg:border border-slate-200 dark:border-white/10",
+            "flex flex-col h-screen bg-white dark:bg-[#0B0F19] transition-all duration-300 ease-in-out border-r lg:border border-slate-200 dark:border-white/10 overflow-hidden",
             className
         )}>
             {/* Top Section: Logo & Action */}
-            <div className={cn("p-6 pb-2", isCollapsed && "px-4")}>
+            <div className={cn("p-6 pb-2 shrink-0", isCollapsed && "px-4")}>
                 <Link to="/dashboard" className={cn(
                     "flex items-center gap-3 mb-6 group px-2",
                     isCollapsed && "justify-center px-0 mb-6"
@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose, isCollapsed }) =>
             </div>
 
             {/* Middle Section: Nav Items */}
-            <nav className="flex-1 space-y-2 px-6 min-h-0">
+            <nav className="flex-1 space-y-2 px-6 overflow-y-auto custom-scrollbar">
                 {menuItems.map((item) => (
                     <NavLink
                         key={item.path}
@@ -101,10 +101,10 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose, isCollapsed }) =>
             </nav>
 
             {/* Bottom Section */}
-            <div className={cn("mt-auto p-6 space-y-4 pt-12", isCollapsed && "px-4 space-y-4 pt-12")}>
+            <div className={cn("p-6 space-y-4 border-t border-slate-100 dark:border-white/5 shrink-0", isCollapsed && "px-4 space-y-4")}>
                 {/* User Profile */}
                 <div className={cn(
-                    "flex items-center justify-between group cursor-pointer rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent hover:border-primary/10 transition-all mb-4",
+                    "flex items-center justify-between group cursor-pointer rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent hover:border-primary/10 transition-all",
                     isCollapsed ? "flex-col p-2 gap-4 bg-transparent border-none" : "p-3"
                 )}>
                     <div className={cn("flex items-center gap-3 min-w-0", isCollapsed && "flex-col")}>
