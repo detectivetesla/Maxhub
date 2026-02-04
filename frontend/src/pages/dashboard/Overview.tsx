@@ -1,4 +1,15 @@
-﻿import {
+﻿import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+    Users, Activity, Database, Zap,
+    Smartphone, CreditCard, ChevronRight,
+    TrendingUp, BarChart3, AlertCircle, CheckCircle2, Clock,
+    Wallet, ShoppingBag, Plus, Download, ArrowLeftRight
+} from 'lucide-react';
+import api from '@/utils/api';
+import { cn } from '@/utils/cn';
+import { useAuth } from '@/context/AuthContext';
+import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
     PieChart, Pie, Cell
 } from 'recharts';
