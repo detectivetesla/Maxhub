@@ -20,12 +20,42 @@ const adminOnly = (req, res, next) => {
 // Get System Stats
 router.get('/stats', authMiddleware, adminOnly, async (req, res) => {
     try {
-        const [totalUsersResult, todayOrdersResult, todayRevenueResult, lifetimeRevenueResult, pendingOrdersResult] = await Promise.all([
+        const [
+            totalUsersResult,
+            todayOrdersResult,
+            todayRevenueResult,
+            lifetimeRevenueResult,
+            pendingOrdersResult,
+            dailyRevenueResult,
+            networkDistResult,
+            recentFundingResult
+        ] = await Promise.all([
             db.query('SELECT COUNT(*) FROM users'),
             db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND created_at >= CURRENT_DATE"),
             db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success' AND created_at >= CURRENT_DATE"),
             db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success'"),
-            db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status = 'processing'")
+            db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status = 'processing'"),
+            db.query(`
+                SELECT DATE(created_at) as date, SUM(amount) as revenue 
+                FROM transactions 
+                WHERE purpose = 'data_purchase' AND status = 'success' AND created_at > NOW() - INTERVAL '7 days' 
+                GROUP BY date 
+                ORDER BY date ASC
+            `),
+            db.query(`
+                SELECT b.network, COUNT(*) as count 
+                FROM transactions t 
+                JOIN bundles b ON t.bundle_id = b.id 
+                WHERE t.purpose = 'data_purchase' 
+                GROUP BY b.network
+            `),
+            db.query(`
+                SELECT t.*, u.full_name as user_name 
+                FROM transactions t 
+                LEFT JOIN users u ON t.user_id = u.id 
+                WHERE t.purpose = 'wallet_funding' AND t.status = 'success' 
+                ORDER BY t.created_at DESC LIMIT 5
+            `)
         ]);
 
         res.json({
@@ -33,7 +63,16 @@ router.get('/stats', authMiddleware, adminOnly, async (req, res) => {
             todayOrders: Number(todayOrdersResult.rows[0].count),
             todayRevenue: Number(todayRevenueResult.rows[0].sum || 0),
             lifetimeRevenue: Number(lifetimeRevenueResult.rows[0].sum || 0),
-            pendingOrders: Number(pendingOrdersResult.rows[0].count)
+            pendingOrders: Number(pendingOrdersResult.rows[0].count),
+            dailyRevenue: dailyRevenueResult.rows.map(row => ({
+                date: new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+                revenue: Number(row.revenue)
+            })),
+            networkDistribution: networkDistResult.rows.map(row => ({
+                name: row.network,
+                count: parseInt(row.count)
+            })),
+            recentFunding: recentFundingResult.rows
         });
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch admin stats', error: error.message });

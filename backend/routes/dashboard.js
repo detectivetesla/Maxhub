@@ -53,11 +53,32 @@ router.get('/stats', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const [balanceResult, totalOrdersResult, processingOrdersResult, completedOrdersResult] = await Promise.all([
+        const [
+            balanceResult,
+            totalOrdersResult,
+            processingOrdersResult,
+            completedOrdersResult,
+            networkDistResult,
+            dailyOrdersResult
+        ] = await Promise.all([
             db.query('SELECT wallet_balance FROM users WHERE id = $1', [userId]),
             db.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase'", [userId]),
             db.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase' AND status = 'processing'", [userId]),
-            db.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase' AND status = 'success'", [userId])
+            db.query("SELECT COUNT(*) FROM transactions WHERE user_id = $1 AND purpose = 'data_purchase' AND status = 'success'", [userId]),
+            db.query(`
+                SELECT b.network, COUNT(*) as count 
+                FROM transactions t 
+                JOIN bundles b ON t.bundle_id = b.id 
+                WHERE t.user_id = $1 AND t.purpose = 'data_purchase' 
+                GROUP BY b.network
+            `, [userId]),
+            db.query(`
+                SELECT DATE(created_at) as date, COUNT(*) as count 
+                FROM transactions 
+                WHERE user_id = $1 AND purpose = 'data_purchase' AND created_at > NOW() - INTERVAL '7 days' 
+                GROUP BY date 
+                ORDER BY date ASC
+            `, [userId])
         ]);
 
         const walletBalance = balanceResult.rows[0]?.wallet_balance || 0;
@@ -69,7 +90,15 @@ router.get('/stats', authMiddleware, async (req, res) => {
             walletBalance: Number(walletBalance),
             totalOrders: Number(totalOrders),
             processingOrders: Number(processingOrders),
-            completedOrders: Number(completedOrders)
+            completedOrders: Number(completedOrders),
+            networkDistribution: networkDistResult.rows.map(row => ({
+                name: row.network,
+                count: parseInt(row.count)
+            })),
+            dailyOrders: dailyOrdersResult.rows.map(row => ({
+                date: new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+                count: parseInt(row.count)
+            }))
         });
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch stats', error: error.message });
