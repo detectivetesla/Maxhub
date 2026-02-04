@@ -220,8 +220,8 @@ const DataBundles: React.FC = () => {
         setMessage(null);
     };
 
-    // Step Indicator Component
-    const StepIndicator = () => {
+    // Step Indicator
+    const renderStepIndicator = () => {
         const config = selectedNetwork ? networkConfig[selectedNetwork] : null;
         const activeColor = config ? config.color : 'bg-primary';
         const activeText = config ? config.textColor : 'text-primary';
@@ -278,7 +278,8 @@ const DataBundles: React.FC = () => {
     };
 
     // Network Selection View (Step 1)
-    const NetworkSelection = () => (
+    // Network Selection View (Step 1)
+    const renderNetworkSelection = () => (
         <div className="space-y-8">
             <div className="text-center space-y-2 sm:space-y-3">
                 <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-primary text-[10px] sm:text-xs font-black uppercase tracking-wider">
@@ -328,12 +329,13 @@ const DataBundles: React.FC = () => {
     );
 
     // Bundle Selection View (Step 2)
-    const BundleSelection = () => {
+    // Bundle Selection View (Step 2)
+    const renderBundleSelection = () => {
         if (!selectedNetwork) return null;
         const config = networkConfig[selectedNetwork];
         const bundles = getBundlesForNetwork(selectedNetwork);
 
-        const SharedHeader = () => (
+        const renderSharedHeader = () => (
             <div className="flex items-center justify-between flex-wrap gap-4 mb-10">
                 <div className="flex items-center gap-3 sm:gap-4">
                     <button onClick={() => setCurrentStep(1)} className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
@@ -372,7 +374,7 @@ const DataBundles: React.FC = () => {
             </div>
         );
 
-        const NormalModeView = () => (
+        const renderNormalModeView = () => (
             <div className="lg:max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="space-y-10">
                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">{bundles.length} package(s) available</div>
@@ -416,7 +418,7 @@ const DataBundles: React.FC = () => {
                                         <div className="space-y-3">
                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Recipient Phone Number</label>
                                             <input
-                                                type="number"
+                                                type="tel"
                                                 value={recipients[0].phone}
                                                 onChange={(e) => updateRecipient(0, 'phone', e.target.value)}
                                                 placeholder="024 123 4567"
@@ -450,7 +452,7 @@ const DataBundles: React.FC = () => {
                                                 <div className="flex-1 space-y-3 w-full">
                                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Recipient {index + 1} Phone</label>
                                                     <input
-                                                        type="number"
+                                                        type="tel"
                                                         value={recipient.phone}
                                                         onChange={(e) => updateRecipient(index, 'phone', e.target.value)}
                                                         placeholder="024 123 4567"
@@ -522,7 +524,7 @@ const DataBundles: React.FC = () => {
             </div>
         );
 
-        const GridModeView = () => (
+        const renderGridModeView = () => (
             <div className="space-y-6 animate-in fade-in zoom-in duration-500">
 
                 <div className={cn('grid gap-3 sm:gap-6', 'grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4')}>
@@ -587,14 +589,15 @@ const DataBundles: React.FC = () => {
 
         return (
             <>
-                <SharedHeader />
-                {mode === 'normal' ? <NormalModeView /> : <GridModeView />}
+                {renderSharedHeader()}
+                {mode === 'normal' ? renderNormalModeView() : renderGridModeView()}
             </>
         );
     };
 
     // Payment View (Step 3) - Only used in Grid Mode
-    const PaymentView = () => {
+    // Payment View (Step 3) - Only used in Grid Mode
+    const renderPaymentView = () => {
         if (!selectedBundle || !selectedNetwork) return null;
         const config = networkConfig[selectedNetwork];
 
@@ -637,7 +640,7 @@ const DataBundles: React.FC = () => {
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Recipient Phone Number</label>
                             <div className="relative">
                                 <input
-                                    type="number"
+                                    type="tel"
                                     value={recipients[0].phone}
                                     onChange={(e) => updateRecipient(0, 'phone', e.target.value)}
                                     placeholder="Enter recipient number"
@@ -695,7 +698,7 @@ const DataBundles: React.FC = () => {
                         <span className="font-black text-xs uppercase tracking-widest">Back to Dashboard</span>
                     </button>
                     <div className="hidden lg:block">
-                        <StepIndicator />
+                        {renderStepIndicator()}
                     </div>
                 </div>
 
@@ -711,9 +714,9 @@ const DataBundles: React.FC = () => {
                 )}
 
                 {/* Main Views */}
-                {currentStep === 1 && <NetworkSelection />}
-                {currentStep === 2 && <BundleSelection />}
-                {currentStep === 3 && <PaymentView />}
+                {currentStep === 1 && renderNetworkSelection()}
+                {currentStep === 2 && renderBundleSelection()}
+                {currentStep === 3 && renderPaymentView()}
             </div>
         </div>
     );
