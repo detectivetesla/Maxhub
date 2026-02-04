@@ -77,9 +77,35 @@ router.post('/paystack', verifyPaystackSignature, async (req, res) => {
 
 // Portal02 Webhook
 router.post('/portal02', async (req, res) => {
-    const { reference, status } = req.body;
-    console.log(`Order ${reference} status updated to: ${status}`);
-    // TODO: Update transaction status in DB and notify user via Socket.IO
+    const { event, orderId, reference, status, recipient, volume } = req.body;
+
+    if (event === 'order.status.updated') {
+        console.log(`Portal02 Webhook: Order ${reference} (${orderId}) for ${recipient} updated to: ${status}`);
+
+        try {
+            // Map Portal02 status to local status
+            let localStatus = 'processing';
+            if (status === 'delivered') localStatus = 'success';
+            if (['failed', 'cancelled', 'refunded'].includes(status)) localStatus = 'failed';
+
+            // Update transaction status
+            // We try to match by reference first, then orderId (just in case)
+            await db.query(
+                'UPDATE transactions SET status = $1, metadata = metadata || $2 WHERE reference = $3 OR reference = $4',
+                [localStatus, JSON.stringify({ portal_order_id: orderId, portal_status: status }), reference, orderId]
+            );
+
+            // TODO: If failed/refunded, initiate a manual or automatic refund to wallet balance
+            if (localStatus === 'failed') {
+                console.warn(`ORDER FAILED: ${reference}. Consider refunding user.`);
+            }
+
+        } catch (error) {
+            console.error('Portal02 Webhook Processing Error:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+
     res.sendStatus(200);
 });
 

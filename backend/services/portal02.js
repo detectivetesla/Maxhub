@@ -54,6 +54,28 @@ const portal02Service = {
             console.error('Portal02 Purchase Error:', error.message);
             throw error;
         }
+    },
+
+    /**
+     * Check the status of an order by ID or reference
+     */
+    checkOrderStatus: async (id) => {
+        try {
+            const response = await axios.get(`${PORTAL02_BASE_URL}/order/status/${id}`, {
+                headers: { 'Authorization': `Bearer ${PORTAL02_API_KEY}` }
+            });
+            return response.data.order;
+        } catch (error) {
+            const providerError = error.response?.data;
+            if (providerError && providerError.success === false) {
+                console.error(`Portal02 Status Check Error [${providerError.type}]: ${providerError.error}`);
+                const err = new Error(providerError.error);
+                err.type = providerError.type;
+                throw err;
+            }
+            console.error('Portal02 Status Check Error:', error.message);
+            throw error;
+        }
     }
 };
 
