@@ -31,7 +31,7 @@ router.get('/stats', authMiddleware, adminOnly, async (req, res) => {
             recentFundingResult
         ] = await Promise.all([
             db.query('SELECT COUNT(*) FROM users'),
-            db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND created_at >= CURRENT_DATE"),
+            db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status != 'initialized' AND created_at >= CURRENT_DATE"),
             db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success' AND created_at >= CURRENT_DATE"),
             db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success'"),
             db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status = 'processing'"),
@@ -46,14 +46,14 @@ router.get('/stats', authMiddleware, adminOnly, async (req, res) => {
                 SELECT b.network, COUNT(*) as count 
                 FROM transactions t 
                 JOIN bundles b ON t.bundle_id = b.id 
-                WHERE t.purpose = 'data_purchase' 
+                WHERE t.purpose = 'data_purchase' AND t.status != 'initialized'
                 GROUP BY b.network
             `),
             db.query(`
                 SELECT t.*, u.full_name as user_name 
                 FROM transactions t 
                 LEFT JOIN users u ON t.user_id = u.id 
-                WHERE t.purpose = 'wallet_funding' AND t.status = 'success' 
+                WHERE t.purpose = 'wallet_funding' AND t.status != 'initialized' AND t.status = 'success' 
                 ORDER BY t.created_at DESC LIMIT 5
             `)
         ]);
@@ -88,7 +88,7 @@ router.get('/recent-data', authMiddleware, adminOnly, async (req, res) => {
              FROM transactions t 
              LEFT JOIN users u ON t.user_id = u.id 
              LEFT JOIN bundles b ON t.bundle_id = b.id 
-             WHERE t.purpose = 'data_purchase' 
+             WHERE t.purpose = 'data_purchase' AND t.status != 'initialized'
              ORDER BY t.created_at DESC LIMIT 10`
         );
 

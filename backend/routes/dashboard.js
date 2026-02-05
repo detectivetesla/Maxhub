@@ -35,7 +35,7 @@ router.post('/deposit', authMiddleware, async (req, res) => {
         // Record pending transaction
         await db.query(
             'INSERT INTO transactions (user_id, type, purpose, amount, status, reference, metadata, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-            [userId, 'credit', 'wallet_funding', amount, 'processing', paystackData.reference, JSON.stringify(metadata), 'paystack']
+            [userId, 'credit', 'wallet_funding', amount, 'initialized', paystackData.reference, JSON.stringify(metadata), 'paystack']
         );
 
         res.json({
@@ -75,7 +75,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
             db.query(`
                 SELECT DATE(created_at) as date, COUNT(*) as count 
                 FROM transactions 
-                WHERE user_id = $1 AND purpose = 'data_purchase' AND created_at > NOW() - INTERVAL '7 days' 
+                WHERE user_id = $1 AND purpose = 'data_purchase' AND status != 'initialized' AND created_at > NOW() - INTERVAL '7 days' 
                 GROUP BY date 
                 ORDER BY date ASC
             `, [userId])
@@ -110,7 +110,7 @@ router.get('/transactions', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
         const result = await db.query(
-            'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+            'SELECT * FROM transactions WHERE user_id = $1 AND status != \'initialized\' ORDER BY created_at DESC LIMIT 50',
             [userId]
         );
         res.json({ transactions: result.rows });
@@ -127,7 +127,7 @@ router.get('/orders', authMiddleware, async (req, res) => {
             `SELECT t.*, b.name as bundle_name, b.network 
              FROM transactions t 
              LEFT JOIN bundles b ON t.bundle_id = b.id 
-             WHERE t.user_id = $1 AND t.purpose = 'data_purchase' 
+             WHERE t.user_id = $1 AND t.purpose = 'data_purchase' AND t.status != 'initialized'
              ORDER BY t.created_at DESC LIMIT 10`,
             [userId]
         );
