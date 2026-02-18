@@ -12,7 +12,7 @@ const Deposits: React.FC = () => {
     useEffect(() => {
         const fetchDeposits = async () => {
             try {
-                const response = await api.get('/dashboard/transactions');
+                const response = await api.get('/wallet/transactions');
                 // Only show wallet funding credits
                 const fundingTx = response.data.transactions.filter((tx: any) =>
                     tx.purpose === 'wallet_funding' && tx.type === 'credit'

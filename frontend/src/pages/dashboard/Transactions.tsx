@@ -13,7 +13,7 @@ const Transactions: React.FC = () => {
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
-                const response = await api.get('/dashboard/transactions');
+                const response = await api.get('/wallet/transactions');
                 setTransactions(response.data.transactions);
             } catch (error) {
                 console.error('Failed to fetch transactions', error);

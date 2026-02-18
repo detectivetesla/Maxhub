@@ -13,7 +13,7 @@ const Orders: React.FC = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await api.get('/dashboard/orders');
+                const response = await api.get('/orders');
                 setOrders(response.data.orders);
             } catch (error) {
                 console.error('Failed to fetch orders', error);

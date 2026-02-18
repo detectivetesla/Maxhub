@@ -171,7 +171,7 @@ const DataBundles: React.FC = () => {
                 }
 
                 try {
-                    await api.post('/dashboard/purchase', {
+                    await api.post('/orders/purchase', {
                         bundleId: bundle.id,
                         phoneNumber: recipient.phone,
                         isRecurring

@@ -1,6 +1,51 @@
 const db = require('../db');
 const { logActivity } = require('../services/logger');
 const notificationService = require('../services/notificationService');
+const paystackService = require('../services/paystack');
+const CONFIG = require('../config/constants');
+
+// Initialize Deposit (Paystack)
+const initializeDeposit = async (req, res) => {
+    try {
+        const { amount } = req.body;
+        const userId = req.user.id;
+        const userEmail = req.user.email;
+
+        if (!amount || amount < CONFIG.MIN_DEPOSIT_GHC) {
+            return res.status(400).json({ message: `Minimum deposit amount is ${CONFIG.CURRENCY} ${CONFIG.MIN_DEPOSIT_GHC.toFixed(2)}` });
+        }
+
+        // Note: User asked to remove fees, so we set fee to 0 or use CONFIG if he changes his mind
+        // For now, let's keep it consistent with the "remove fees" request
+        const fee = 0;
+        const totalAmount = Number(amount) + Number(fee);
+
+        const metadata = {
+            user_id: userId,
+            purpose: 'wallet_funding',
+            requested_amount: amount,
+            fee: fee
+        };
+
+        const paystackData = await paystackService.initializeTransaction(userEmail, totalAmount, metadata);
+
+        // Record pending transaction
+        await db.query(
+            'INSERT INTO transactions (user_id, type, purpose, amount, status, reference, metadata, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+            [userId, 'credit', 'wallet_funding', amount, 'initialized', paystackData.reference, JSON.stringify(metadata), 'paystack']
+        );
+
+        res.json({
+            authorizationUrl: paystackData.authorization_url,
+            reference: paystackData.reference,
+            fee,
+            totalAmount
+        });
+    } catch (error) {
+        console.error('Deposit Init Error:', error);
+        res.status(500).json({ message: 'Failed to initialize deposit', error: error.message });
+    }
+};
 
 // Get wallet balance
 const getBalance = async (req, res) => {
@@ -147,4 +192,18 @@ const getDeposits = async (req, res) => {
     }
 };
 
-module.exports = { getBalance, fundWallet, getDeposits };
+// Get all user transactions
+const getTransactions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const result = await db.query(
+            'SELECT * FROM transactions WHERE user_id = $1 AND status != \'initialized\' ORDER BY created_at DESC LIMIT 50',
+            [userId]
+        );
+        res.json({ transactions: result.rows });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch transactions', error: error.message });
+    }
+};
+
+module.exports = { initializeDeposit, getBalance, fundWallet, getDeposits, getTransactions };

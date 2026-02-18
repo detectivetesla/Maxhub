@@ -20,7 +20,7 @@ const Wallet: React.FC = () => {
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
-                const response = await api.get('/dashboard/transactions');
+                const response = await api.get('/wallet/transactions');
                 setTransactions(response.data.transactions);
             } catch (error) {
                 console.error('Failed to fetch transactions', error);
@@ -52,10 +52,10 @@ const Wallet: React.FC = () => {
             const pendingTx = transactions.find(tx => tx.status === 'processing' || tx.status === 'initialized');
             if (pendingTx) {
                 try {
-                    const response = await api.get(`/dashboard/verify/${pendingTx.reference}`);
+                    const response = await api.get(`/wallet/verify/${pendingTx.reference}`);
                     if (response.data.status === 'success') {
                         await refreshUser();
-                        const txResponse = await api.get('/dashboard/transactions');
+                        const txResponse = await api.get('/wallet/transactions');
                         setTransactions(txResponse.data.transactions);
                     }
                 } catch (error) {
@@ -75,7 +75,7 @@ const Wallet: React.FC = () => {
 
         setIsProcessing(true);
         try {
-            const response = await api.post('/dashboard/deposit', { amount: Number(amount) });
+            const response = await api.post('/wallet/deposit', { amount: Number(amount) });
             const { authorizationUrl } = response.data;
 
             // Redirect to Paystack
@@ -91,12 +91,12 @@ const Wallet: React.FC = () => {
     const verifyTransaction = async (reference: string) => {
         try {
             setIsProcessing(true);
-            const response = await api.get(`/dashboard/verify/${reference}`);
+            const response = await api.get(`/wallet/verify/${reference}`);
             alert(response.data.message);
 
             // Refresh balance and transactions
             await refreshUser();
-            const txResponse = await api.get('/dashboard/transactions');
+            const txResponse = await api.get('/wallet/transactions');
             setTransactions(txResponse.data.transactions);
         } catch (error: any) {
             console.error('Verification failed', error);

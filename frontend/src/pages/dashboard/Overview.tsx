@@ -34,8 +34,8 @@ const Overview: React.FC = () => {
         try {
             const [statsRes, ordersRes, fundingRes] = await Promise.all([
                 api.get('/dashboard/stats'),
-                api.get('/dashboard/orders'),
-                api.get('/dashboard/transactions')
+                api.get('/orders'),
+                api.get('/wallet/transactions')
             ]);
 
             setStats(statsRes.data);
