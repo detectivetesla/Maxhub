@@ -7,9 +7,11 @@ import { cn } from '@/utils/cn';
 import Button from '@/components/Button';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/config/constants';
+import { useSearchParams } from 'react-router-dom';
 
 const Wallet: React.FC = () => {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [amount, setAmount] = useState<string>('');
@@ -28,7 +30,42 @@ const Wallet: React.FC = () => {
         };
 
         fetchTransactions();
+
+        // Check for reference in URL for automatic verification
+        const reference = searchParams.get('reference') || searchParams.get('trxref');
+        if (reference) {
+            verifyTransaction(reference);
+            // Clean up the URL
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete('reference');
+            newParams.delete('trxref');
+            setSearchParams(newParams, { replace: true });
+        }
     }, []);
+
+    // Real-time polling for pending transactions
+    useEffect(() => {
+        const hasPending = transactions.some(tx => tx.status === 'processing' || tx.status === 'initialized');
+        if (!hasPending) return;
+
+        const interval = setInterval(async () => {
+            const pendingTx = transactions.find(tx => tx.status === 'processing' || tx.status === 'initialized');
+            if (pendingTx) {
+                try {
+                    const response = await api.get(`/dashboard/verify/${pendingTx.reference}`);
+                    if (response.data.status === 'success') {
+                        await refreshUser();
+                        const txResponse = await api.get('/dashboard/transactions');
+                        setTransactions(txResponse.data.transactions);
+                    }
+                } catch (error) {
+                    console.error('Polling verification failed', error);
+                }
+            }
+        }, 10000); // Poll every 10 seconds
+
+        return () => clearInterval(interval);
+    }, [transactions]);
 
     const handleDeposit = async () => {
         if (!amount || Number(amount) < APP_CONFIG.MIN_DEPOSIT_GHC) {
@@ -56,7 +93,9 @@ const Wallet: React.FC = () => {
             setIsProcessing(true);
             const response = await api.get(`/dashboard/verify/${reference}`);
             alert(response.data.message);
-            // Refresh transactions list
+
+            // Refresh balance and transactions
+            await refreshUser();
             const txResponse = await api.get('/dashboard/transactions');
             setTransactions(txResponse.data.transactions);
         } catch (error: any) {

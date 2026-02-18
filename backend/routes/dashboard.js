@@ -157,7 +157,7 @@ router.get('/verify/:reference', authMiddleware, async (req, res) => {
 
         // If already success or failed, no need to verify again with Paystack for logic, 
         // but we might want to refresh UI state.
-        if (transaction.status !== 'processing') {
+        if (transaction.status !== 'processing' && transaction.status !== 'initialized') {
             return res.json({
                 status: transaction.status,
                 message: `Transaction is already ${transaction.status}`

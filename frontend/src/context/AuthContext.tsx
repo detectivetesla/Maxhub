@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/utils/api';
+import { supabase } from '@/utils/supabase';
 
 interface User {
     id: string;
@@ -17,6 +18,7 @@ interface AuthContextType {
     login: (data: { token: string; user: User }) => void;
     register: (data: { email: string; fullName: string; phoneNumber: string; password: string }) => Promise<void>;
     logout: () => void;
+    refreshUser: () => Promise<void>;
     isAuthenticated: boolean;
     isLoading: boolean;
 }
@@ -28,22 +30,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            if (token) {
-                try {
-                    const response = await api.get('/auth/me');
-                    setUser(response.data.user);
-                } catch (error) {
-                    console.error('Failed to fetch user:', error);
-                    logout();
-                }
+    const fetchUser = async () => {
+        if (token) {
+            try {
+                const response = await api.get('/auth/me');
+                setUser(response.data.user);
+            } catch (error) {
+                console.error('Failed to fetch user:', error);
+                logout();
             }
-            setIsLoading(false);
-        };
+        }
+        setIsLoading(false);
+    };
 
+    useEffect(() => {
         fetchUser();
     }, [token]);
+
+    // Real-time user updates (e.g. balance changes from webhooks)
+    useEffect(() => {
+        let userChannel: any = null;
+        if (supabase && user?.id) {
+            userChannel = supabase
+                .channel(`user-data-${user.id}`)
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'users',
+                    filter: `id=eq.${user.id}`
+                }, () => {
+                    console.log('User data updated in DB, refreshing...');
+                    fetchUser();
+                })
+                .subscribe();
+        }
+
+        return () => {
+            if (userChannel) {
+                supabase?.removeChannel(userChannel);
+            }
+        };
+    }, [user?.id]);
 
     const login = (data: { token: string; user: User }) => {
         const { token, user } = data;
@@ -65,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token, isLoading }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, refreshUser: fetchUser, isAuthenticated: !!token, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

@@ -12,7 +12,7 @@ const verifyPaystackSignature = (req, res, next) => {
         return res.sendStatus(500);
     }
     const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
-        .update(JSON.stringify(req.body))
+        .update(req.rawBody || JSON.stringify(req.body))
         .digest('hex');
     if (hash === req.headers['x-paystack-signature']) {
         next();
