@@ -22,6 +22,8 @@ const verifyPaystackSignature = (req, res, next) => {
     }
 };
 
+const walletController = require('../controllers/walletController');
+
 // Paystack Webhook
 router.post('/paystack', verifyPaystackSignature, async (req, res) => {
     try {
@@ -44,63 +46,20 @@ router.post('/paystack', verifyPaystackSignature, async (req, res) => {
             const userId = metadata?.user_id;
             const requestedAmount = metadata?.requested_amount;
 
-            console.log(`Processing Success: Ref=${reference}, User=${userId}, Amount=${requestedAmount}`);
+            console.log(`Processing Webhook Success: Ref=${reference}, User=${userId}, Amount=${requestedAmount}`);
 
             if (!userId || !requestedAmount) {
                 console.error('Missing userId or requestedAmount in webhook metadata');
-                return res.sendStatus(200); // Still return 200 to Paystack to avoid retries
-            }
-
-            // check if transaction already processed
-            const checkTx = await db.query('SELECT status FROM transactions WHERE reference = $1', [reference]);
-            if (checkTx.rows.length > 0 && checkTx.rows[0].status === 'success') {
-                console.log(`Transaction ${reference} already marked as success.`);
                 return res.sendStatus(200);
             }
 
-            // Use a transaction for consistency
-            const client = await db.pool.connect();
-            try {
-                await client.query('BEGIN');
+            // Call our new robust funding logic
+            // We pass req and res, but fundWallet needs certain properties on req
+            req.user = { id: userId };
+            req.body.amount = requestedAmount;
+            req.body.reference = reference;
 
-                // Update wallet balance
-                const updateWallet = await client.query(
-                    'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2 RETURNING wallet_balance',
-                    [requestedAmount, userId]
-                );
-
-                // Update transaction status
-                await client.query(
-                    'UPDATE transactions SET status = $1 WHERE reference = $2',
-                    ['success', reference]
-                );
-
-                await client.query('COMMIT');
-
-                console.log(`Successfully credited user ${userId}. New balance: ${updateWallet.rows[0]?.wallet_balance}`);
-
-                await logActivity({
-                    userId,
-                    type: 'order',
-                    level: 'success',
-                    action: 'Payment Success',
-                    message: `Payment confirmed for transaction: ${reference}. Wallet credited with ${requestedAmount} GHC.`
-                });
-
-                await notificationService.createNotification({
-                    userId,
-                    title: 'Wallet Funded',
-                    message: `Successfully credited ${requestedAmount} GHC to your wallet.`,
-                    type: 'success'
-                });
-
-            } catch (txError) {
-                await client.query('ROLLBACK');
-                console.error('Database transaction error in webhook:', txError);
-                throw txError;
-            } finally {
-                client.release();
-            }
+            return walletController.fundWallet(req, res);
         }
 
         res.sendStatus(200);
