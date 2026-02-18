@@ -106,9 +106,6 @@ const Wallet: React.FC = () => {
         }
     };
 
-    const fee = amount ? (Number(amount) * APP_CONFIG.TRANSACTION_FEE_PERCENTAGE).toFixed(2) : '0.00';
-    const total = amount ? (Number(amount) + Number(fee)).toFixed(2) : '0.00';
-
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
             <header>
@@ -177,10 +174,6 @@ const Wallet: React.FC = () => {
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end">
                                     <label className="text-xs font-black text-slate-400 dark:text-slate-600 ml-1 uppercase tracking-widest">Amount to Deposit (Min {APP_CONFIG.CURRENCY} {APP_CONFIG.MIN_DEPOSIT_GHC.toFixed(2)})</label>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-bold text-slate-500 tracking-tighter italic">{(APP_CONFIG.TRANSACTION_FEE_PERCENTAGE * 100)}% Processing Fee: {APP_CONFIG.CURRENCY_SYMBOL} {fee}</p>
-                                        <p className="text-[10px] font-black text-primary tracking-tighter uppercase">Total: {APP_CONFIG.CURRENCY_SYMBOL} {total}</p>
-                                    </div>
                                 </div>
                                 <div className="relative">
                                     <input
