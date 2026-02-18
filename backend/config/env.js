@@ -17,7 +17,7 @@ module.exports = {
     PORTAL02_API_KEY: process.env.PORTAL02_API_KEY,
     FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
     TRANSACTION_FEE_PERCENTAGE: parseFloat(process.env.TRANSACTION_FEE_PERCENTAGE) || 0.00,
-    MIN_DEPOSIT_GHC: parseFloat(process.env.MIN_DEPOSIT_GHC) || 6.00,
+    MIN_DEPOSIT_GHC: parseFloat(process.env.MIN_DEPOSIT_GHC) || 1.00,
     SYSTEM_CURRENCY: process.env.SYSTEM_CURRENCY || 'GH₵',
     SYSTEM_NAME: process.env.SYSTEM_NAME || 'MaxHub'
 };
