@@ -24,71 +24,90 @@ const verifyPaystackSignature = (req, res, next) => {
 
 // Paystack Webhook
 router.post('/paystack', verifyPaystackSignature, async (req, res) => {
-    const event = req.body;
+    try {
+        const event = req.body;
+        console.log(`Paystack Webhook Received: ${event.event}`);
 
-    if (event.event === 'charge.success') {
-        const { reference, metadata } = event.data;
-        const userId = metadata?.user_id;
-        const requestedAmount = metadata?.requested_amount;
+        if (event.event === 'charge.success') {
+            const { reference } = event.data;
+            let metadata = event.data.metadata;
 
-        console.log(`Payment success: ${reference}, User: ${userId}, Amount: ${requestedAmount}`);
+            // Paystack sometimes sends metadata as a string
+            if (typeof metadata === 'string') {
+                try {
+                    metadata = JSON.parse(metadata);
+                } catch (e) {
+                    console.error('Failed to parse Paystack metadata string:', e.message);
+                }
+            }
 
-        if (userId && requestedAmount) {
+            const userId = metadata?.user_id;
+            const requestedAmount = metadata?.requested_amount;
+
+            console.log(`Processing Success: Ref=${reference}, User=${userId}, Amount=${requestedAmount}`);
+
+            if (!userId || !requestedAmount) {
+                console.error('Missing userId or requestedAmount in webhook metadata');
+                return res.sendStatus(200); // Still return 200 to Paystack to avoid retries
+            }
+
+            // check if transaction already processed
+            const checkTx = await db.query('SELECT status FROM transactions WHERE reference = $1', [reference]);
+            if (checkTx.rows.length > 0 && checkTx.rows[0].status === 'success') {
+                console.log(`Transaction ${reference} already marked as success.`);
+                return res.sendStatus(200);
+            }
+
+            // Use a transaction for consistency
+            const client = await db.pool.connect();
             try {
-                // Use a transaction for consistency
-                await db.pool.connect().then(async (client) => {
-                    try {
-                        await client.query('BEGIN');
+                await client.query('BEGIN');
 
-                        // Check if transaction already processed
-                        const checkTx = await client.query('SELECT status FROM transactions WHERE reference = $1', [reference]);
-                        if (checkTx.rows.length > 0 && checkTx.rows[0].status === 'success') {
-                            await client.query('COMMIT');
-                            return;
-                        }
+                // Update wallet balance
+                const updateWallet = await client.query(
+                    'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2 RETURNING wallet_balance',
+                    [requestedAmount, userId]
+                );
 
-                        // Update wallet
-                        await client.query(
-                            'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2',
-                            [requestedAmount, userId]
-                        );
+                // Update transaction status
+                await client.query(
+                    'UPDATE transactions SET status = $1 WHERE reference = $2',
+                    ['success', reference]
+                );
 
-                        await client.query(
-                            'UPDATE transactions SET status = $1 WHERE reference = $2',
-                            ['success', reference]
-                        );
+                await client.query('COMMIT');
 
-                        await client.query('COMMIT');
+                console.log(`Successfully credited user ${userId}. New balance: ${updateWallet.rows[0]?.wallet_balance}`);
 
-                        logActivity({
-                            userId,
-                            type: 'order',
-                            level: 'success',
-                            action: 'Payment Success',
-                            message: `Payment confirmed for transaction: ${reference}. Wallet credited with ${requestedAmount}`
-                        });
-
-                        await notificationService.createNotification({
-                            userId,
-                            title: 'Wallet Funded',
-                            message: `Successfully credited ${requestedAmount} GHC to your wallet.`,
-                            type: 'success'
-                        });
-                    } catch (e) {
-                        await client.query('ROLLBACK');
-                        throw e;
-                    } finally {
-                        client.release();
-                    }
+                await logActivity({
+                    userId,
+                    type: 'order',
+                    level: 'success',
+                    action: 'Payment Success',
+                    message: `Payment confirmed for transaction: ${reference}. Wallet credited with ${requestedAmount} GHC.`
                 });
-            } catch (error) {
-                console.error('Webhook processing error:', error);
-                return res.status(500).json({ message: 'Internal server error' });
+
+                await notificationService.createNotification({
+                    userId,
+                    title: 'Wallet Funded',
+                    message: `Successfully credited ${requestedAmount} GHC to your wallet.`,
+                    type: 'success'
+                });
+
+            } catch (txError) {
+                await client.query('ROLLBACK');
+                console.error('Database transaction error in webhook:', txError);
+                throw txError;
+            } finally {
+                client.release();
             }
         }
-    }
 
-    res.sendStatus(200);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Paystack Webhook Root Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
 // Portal02 Webhook

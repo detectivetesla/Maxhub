@@ -24,7 +24,7 @@ const logActivity = async ({ userId = null, type = 'system', level = 'info', act
 
         console.log(`[LOG] ${type.toUpperCase()} | ${level.toUpperCase()} | ${action}: ${message}`);
     } catch (error) {
-        console.error('CRITICAL: Failed to write activity log:', error);
+        console.error('CRITICAL: Failed to write activity log:', error.message);
     }
 };
 
