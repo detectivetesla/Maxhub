@@ -90,7 +90,7 @@ const AdminAPIPage: React.FC = () => {
                                     <Globe className="w-4 h-4 text-blue-500" />
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base API URL</span>
                                 </div>
-                                <p className="font-bold text-slate-900 dark:text-white text-sm truncate">https://api.emweb.com/v1</p>
+                                <p className="font-bold text-slate-900 dark:text-white text-sm truncate">maxhub</p>
                             </div>
                             <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-2">
                                 <div className="flex items-center gap-2">
