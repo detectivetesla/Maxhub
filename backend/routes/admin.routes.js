@@ -20,7 +20,12 @@ router.get('/bundles', adminController.getAllBundles);
 router.post('/bundles', adminController.createBundle);
 router.get('/orders', adminController.getAllOrders);
 router.get('/transactions', adminController.getAllTransactions);
-router.post('/send-message', adminController.sendMessage);
+router.get('/send-message', adminController.sendMessage);
 router.get('/logs', adminController.getLogs);
+
+// Network Management
+router.get('/networks', adminController.getNetworks);
+router.get('/provider-health', adminController.getProviderHealth);
+router.post('/sync-offers', adminController.syncProviderOffers);
 
 module.exports = router;

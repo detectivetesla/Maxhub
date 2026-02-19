@@ -66,6 +66,19 @@ const portal02Service = {
             console.error('Portal02 Status Check Error:', error.message);
             throw error;
         }
+    },
+
+    /**
+     * Check Portal-02 account balance
+     */
+    checkBalance: async () => {
+        try {
+            const result = await portal02Utils.checkBalance();
+            return result;
+        } catch (error) {
+            console.error('Portal02 Balance Check Error:', error.message);
+            throw error;
+        }
     }
 };
 

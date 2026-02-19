@@ -42,6 +42,7 @@ import Notifications from '@/pages/dashboard/Notifications';
 import AdminTransactionsPage from '@/pages/admin/AdminTransactionsPage';
 import AdminEmailPage from '@/pages/admin/AdminEmailPage';
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
+import AdminNetworksPage from '@/pages/admin/AdminNetworksPage';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -77,7 +78,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="bundles" element={<AdminBundlesPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="transactions" element={<AdminTransactionsPage />} />
-                <Route path="networks" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Networks</h1><p className="text-slate-500">Provider Core Configuration.</p></div>} />
+                <Route path="networks" element={<AdminNetworksPage />} />
                 <Route path="developer" element={<AdminAPIPage />} />
                 <Route path="email" element={<AdminEmailPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />

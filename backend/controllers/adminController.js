@@ -346,14 +346,68 @@ const adminController = {
         }
     },
 
-    getLogs: async (req, res) => {
-        try {
-            const result = await db.query('SELECT l.*, u.full_name as user_name FROM activity_logs l LEFT JOIN users u ON l.user_id = u.id ORDER BY l.created_at DESC LIMIT 100');
-            res.json({ logs: result.rows });
-        } catch (error) {
-            res.status(500).json({ message: 'Failed to fetch logs' });
-        }
+} catch (error) {
+    res.status(500).json({ message: 'Failed to fetch logs' });
+}
+    },
+
+// Network Management
+getNetworks: async (req, res) => {
+    try {
+        const result = await db.query(`
+                SELECT 
+                    network, 
+                    COUNT(*) as bundle_count,
+                    COUNT(CASE WHEN is_active = true THEN 1 END) as active_count
+                FROM bundles 
+                GROUP BY network
+            `);
+        res.json({ networks: result.rows });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch networks', error: error.message });
     }
+},
+
+    getProviderHealth: async (req, res) => {
+        try {
+            const balanceData = await portal02Service.checkBalance();
+            res.json({
+                provider: 'Portal-02',
+                status: balanceData.success ? 'online' : 'offline',
+                balance: balanceData.balance,
+                currency: balanceData.currency,
+                lastChecked: new Date().toISOString()
+            });
+        } catch (error) {
+            res.status(500).json({ message: 'Failed to check provider health', error: error.message });
+        }
+    },
+
+        syncProviderOffers: async (req, res) => {
+            const client = await db.getClient();
+            try {
+                await client.query('BEGIN');
+                const offers = await portal02Service.syncBundles();
+
+                // Log the sync activity
+                await client.query(
+                    'INSERT INTO activity_logs (user_id, type, action) VALUES ($1, $2, $3)',
+                    [req.user.id, 'system', `Synchronized ${offers.length} offers from Portal-02`]
+                );
+
+                await client.query('COMMIT');
+                res.json({
+                    message: 'Provider data synchronized successfully',
+                    offersCount: offers.length,
+                    updatedAt: new Date().toISOString()
+                });
+            } catch (error) {
+                await client.query('ROLLBACK');
+                res.status(500).json({ message: 'Sync failed', error: error.message });
+            } finally {
+                client.release();
+            }
+        }
 };
 
 module.exports = adminController;
