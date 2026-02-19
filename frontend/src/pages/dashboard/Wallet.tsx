@@ -92,12 +92,18 @@ const Wallet: React.FC = () => {
         try {
             setIsProcessing(true);
             const response = await api.get(`/wallet/verify/${reference}`);
-            alert(response.data.message);
 
-            // Refresh balance and transactions
+            // 1. Refresh balance and transactions FIRST
             await refreshUser();
             const txResponse = await api.get('/wallet/transactions');
             setTransactions(txResponse.data.transactions);
+
+            // 2. Then show success message
+            if (response.data.status === 'success') {
+                alert('Deposit Successful! Your balance has been updated.');
+            } else {
+                alert(response.data.message || 'Deposit status updated.');
+            }
         } catch (error: any) {
             console.error('Verification failed', error);
             alert(error.response?.data?.message || 'Failed to verify transaction');
