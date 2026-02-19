@@ -171,6 +171,61 @@ const adminController = {
         }
     },
 
+    // Transactions Management (Deposits + Purchases)
+    getAllTransactions: async (req, res) => {
+        try {
+            const { limit = 100, page = 1, status, type, search } = req.query;
+            const offset = (page - 1) * limit;
+
+            let query = `
+                SELECT 
+                    t.*,
+                    u.full_name as user_name,
+                    u.email as user_email,
+                    b.name as bundle_name,
+                    b.network
+                FROM transactions t
+                LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN bundles b ON t.bundle_id = b.id
+                WHERE 1=1
+            `;
+            const params = [];
+
+            if (status) {
+                params.push(status);
+                query += ` AND t.status = $${params.length}`;
+            }
+
+            if (type) {
+                params.push(type);
+                query += ` AND t.type = $${params.length}`;
+            }
+
+            if (search) {
+                params.push(`%${search}%`);
+                query += ` AND (u.full_name ILIKE $${params.length} OR t.reference ILIKE $${params.length} OR t.recipient_phone ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
+            }
+
+            query += ` ORDER BY t.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+            params.push(limit, offset);
+
+            const result = await db.query(query, params);
+
+            // Get total count for pagination
+            const countResult = await db.query('SELECT COUNT(*) FROM transactions');
+
+            res.json({
+                transactions: result.rows,
+                total: parseInt(countResult.rows[0].count),
+                page: parseInt(page),
+                limit: parseInt(limit)
+            });
+        } catch (error) {
+            console.error('Get Admin Transactions Error:', error);
+            res.status(500).json({ message: 'Failed to fetch transactions', error: error.message });
+        }
+    },
+
     // Orders Management
     getAllOrders: async (req, res) => {
         try {

@@ -39,6 +39,7 @@ import Settings from '@/pages/dashboard/Settings';
 import Profile from '@/pages/dashboard/Profile';
 import Inboxes from '@/pages/dashboard/Inboxes';
 import Notifications from '@/pages/dashboard/Notifications';
+import AdminTransactionsPage from '@/pages/admin/AdminTransactionsPage';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -73,7 +74,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="bundles" element={<AdminBundlesPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
-                <Route path="transactions" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transactions</h1><p className="text-slate-500">Financial Ledger Processing.</p></div>} />
+                <Route path="transactions" element={<AdminTransactionsPage />} />
                 <Route path="discounts" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Discounts</h1><p className="text-slate-500">Coupon and Reward Generation.</p></div>} />
                 <Route path="networks" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Networks</h1><p className="text-slate-500">Provider Core Configuration.</p></div>} />
                 <Route path="developer" element={<AdminAPIPage />} />
