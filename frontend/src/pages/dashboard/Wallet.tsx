@@ -181,6 +181,7 @@ const Wallet: React.FC = () => {
                                         placeholder={APP_CONFIG.MIN_DEPOSIT_GHC.toFixed(2)}
                                         value={amount}
                                         onChange={(e) => setAmount(e.target.value)}
+                                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                         className="w-full px-10 py-6 rounded-[1.5rem] bg-white dark:bg-black/20 border border-slate-200 dark:border-white/5 focus:border-slate-400 dark:focus:border-primary outline-none transition-all text-4xl font-black text-black dark:text-white shadow-inner"
                                     />
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-700 font-bold text-xl">{APP_CONFIG.CURRENCY_SYMBOL}</div>

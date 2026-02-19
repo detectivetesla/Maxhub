@@ -78,3 +78,14 @@
     background: hsl(var(--muted-foreground) / 0.3);
   }
 }
+
+/* Hide spin buttons for numeric inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
