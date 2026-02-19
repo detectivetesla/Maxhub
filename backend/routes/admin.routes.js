@@ -18,6 +18,7 @@ router.put('/users/:id', adminController.updateUser);
 router.delete('/users/:id', adminController.deleteUser);
 router.get('/bundles', adminController.getAllBundles);
 router.post('/bundles', adminController.createBundle);
+router.get('/orders', adminController.getAllOrders);
 router.get('/logs', adminController.getLogs);
 
 module.exports = router;

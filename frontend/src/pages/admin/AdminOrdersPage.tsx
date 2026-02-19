@@ -26,7 +26,7 @@ const AdminOrdersPage: React.FC = () => {
                 .channel('admin-orders-updates')
                 .on(
                     'postgres_changes',
-                    { event: '*', schema: 'public', table: 'orders' },
+                    { event: '*', schema: 'public', table: 'transactions' },
                     () => fetchOrders()
                 )
                 .subscribe();

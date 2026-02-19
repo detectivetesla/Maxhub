@@ -171,7 +171,33 @@ const adminController = {
         }
     },
 
-    // ... (other bundle methods, logs, settings skipped for brevity in this step)
+    // Orders Management
+    getAllOrders: async (req, res) => {
+        try {
+            const result = await db.query(`
+                SELECT 
+                    t.id,
+                    t.created_at,
+                    t.amount,
+                    t.status,
+                    t.recipient_phone,
+                    u.full_name as user_name,
+                    b.network,
+                    b.name as bundle_name
+                FROM transactions t
+                LEFT JOIN users u ON t.user_id = u.id
+                LEFT JOIN bundles b ON t.bundle_id = b.id
+                WHERE t.purpose = 'data_purchase'
+                ORDER BY t.created_at DESC
+                LIMIT 100
+            `);
+            res.json({ orders: result.rows });
+        } catch (error) {
+            console.error('Get Admin Orders Error:', error);
+            res.status(500).json({ message: 'Failed to fetch orders', error: error.message });
+        }
+    },
+
     getLogs: async (req, res) => {
         try {
             const result = await db.query('SELECT l.*, u.full_name as user_name FROM activity_logs l LEFT JOIN users u ON l.user_id = u.id ORDER BY l.created_at DESC LIMIT 100');
