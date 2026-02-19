@@ -82,7 +82,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
             title: 'Finance',
             items: [
                 { icon: ArrowLeftRight, label: 'Transactions', path: '/admin/transactions', color: 'text-amber-500' },
-                { icon: Ticket, label: 'Discounts', path: '/admin/discounts', color: 'text-purple-500' },
             ]
         },
         {

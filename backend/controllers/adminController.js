@@ -253,6 +253,51 @@ const adminController = {
         }
     },
 
+    // Communication Management
+    sendMessage: async (req, res) => {
+        const client = await db.getClient();
+        try {
+            const { recipientType, recipientId, subject, message, priority } = req.body;
+            const adminId = req.user.id;
+
+            await client.query('BEGIN');
+
+            let userIds = [];
+            if (recipientType === 'all') {
+                const result = await client.query('SELECT id FROM users WHERE role = $1', ['customer']);
+                userIds = result.rows.map(r => r.id);
+            } else if (recipientType === 'specific') {
+                userIds = [recipientId];
+            } else if (recipientType === 'active') {
+                const result = await client.query('SELECT id FROM users WHERE last_login > NOW() - INTERVAL \'30 days\'');
+                userIds = result.rows.map(r => r.id);
+            }
+
+            // Insert into notifications/messages table for each user
+            for (const userId of userIds) {
+                await client.query(
+                    'INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4)',
+                    [userId, subject, message, priority === 'urgent' ? 'warning' : 'info']
+                );
+            }
+
+            // Log activity
+            await client.query(
+                'INSERT INTO activity_logs (user_id, type, action) VALUES ($1, $2, $3)',
+                [adminId, 'system', `Sent ${recipientType} message: ${subject}`]
+            );
+
+            await client.query('COMMIT');
+            res.json({ message: `Message queued for ${userIds.length} users` });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error('Send Message Error:', error);
+            res.status(500).json({ message: 'Failed to send message', error: error.message });
+        } finally {
+            client.release();
+        }
+    },
+
     getLogs: async (req, res) => {
         try {
             const result = await db.query('SELECT l.*, u.full_name as user_name FROM activity_logs l LEFT JOIN users u ON l.user_id = u.id ORDER BY l.created_at DESC LIMIT 100');

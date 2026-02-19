@@ -40,6 +40,7 @@ import Profile from '@/pages/dashboard/Profile';
 import Inboxes from '@/pages/dashboard/Inboxes';
 import Notifications from '@/pages/dashboard/Notifications';
 import AdminTransactionsPage from '@/pages/admin/AdminTransactionsPage';
+import AdminEmailPage from '@/pages/admin/AdminEmailPage';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -75,10 +76,9 @@ const AppRoutes: React.FC = () => {
                 <Route path="bundles" element={<AdminBundlesPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="transactions" element={<AdminTransactionsPage />} />
-                <Route path="discounts" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Discounts</h1><p className="text-slate-500">Coupon and Reward Generation.</p></div>} />
                 <Route path="networks" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Networks</h1><p className="text-slate-500">Provider Core Configuration.</p></div>} />
                 <Route path="developer" element={<AdminAPIPage />} />
-                <Route path="email" element={<div className="p-8"><h1 className="text-2xl font-bold text-slate-900 dark:text-white">Send Email</h1><p className="text-slate-500">Direct Communication Hub.</p></div>} />
+                <Route path="email" element={<AdminEmailPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
                 <Route path="activity-log" element={<AdminActivityLogPage />} />
                 <Route path="logs" element={<AdminLogsPage />} />
