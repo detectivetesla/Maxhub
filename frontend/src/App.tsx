@@ -41,6 +41,7 @@ import Inboxes from '@/pages/dashboard/Inboxes';
 import Notifications from '@/pages/dashboard/Notifications';
 import AdminTransactionsPage from '@/pages/admin/AdminTransactionsPage';
 import AdminEmailPage from '@/pages/admin/AdminEmailPage';
+import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -71,7 +72,7 @@ const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
             }>
                 <Route index element={<AdminPage />} />
-                <Route path="analytics" element={<div className="p-8"><h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">System Analytics</h1><p className="text-slate-500 font-bold mt-1">Deep-dive traffic and revenue metrics.</p></div>} />
+                <Route path="analytics" element={<AdminAnalyticsPage />} />
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="bundles" element={<AdminBundlesPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />

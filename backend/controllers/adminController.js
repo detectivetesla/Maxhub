@@ -15,7 +15,10 @@ const adminController = {
                 pendingOrdersResult,
                 dailyRevenueResult,
                 networkDistResult,
-                recentFundingResult
+                recentFundingResult,
+                monthlyRevenueResult,
+                userGrowthResult,
+                bundlePerformanceResult
             ] = await Promise.all([
                 db.query('SELECT COUNT(*) FROM users'),
                 db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status != 'initialized' AND created_at >= CURRENT_DATE"),
@@ -33,15 +36,47 @@ const adminController = {
                     SELECT b.network, COUNT(*) as count 
                     FROM transactions t 
                     JOIN bundles b ON t.bundle_id = b.id 
-                    WHERE t.purpose = 'data_purchase' AND t.status != 'initialized'
+                    WHERE t.purpose = 'data_purchase' AND t.status = 'success'
                     GROUP BY b.network
                 `),
                 db.query(`
                     SELECT t.*, u.full_name as user_name 
                     FROM transactions t 
                     LEFT JOIN users u ON t.user_id = u.id 
-                    WHERE t.purpose = 'wallet_funding' AND t.status != 'initialized' AND t.status = 'success' 
+                    WHERE t.purpose = 'wallet_funding' AND t.status = 'success' 
                     ORDER BY t.created_at DESC LIMIT 5
+                `),
+                db.query(`
+                    SELECT 
+                        TO_CHAR(created_at, 'Mon YYYY') as month,
+                        SUM(amount) as revenue,
+                        MIN(created_at) as sort_key
+                    FROM transactions 
+                    WHERE purpose = 'data_purchase' AND status = 'success' AND created_at > NOW() - INTERVAL '12 months'
+                    GROUP BY month
+                    ORDER BY sort_key ASC
+                `),
+                db.query(`
+                    SELECT 
+                        TO_CHAR(created_at, 'Mon DD') as date,
+                        COUNT(*) as count,
+                        MIN(created_at) as sort_key
+                    FROM users
+                    WHERE created_at > NOW() - INTERVAL '14 days'
+                    GROUP BY date
+                    ORDER BY sort_key ASC
+                `),
+                db.query(`
+                    SELECT 
+                        COALESCE(b.name, 'Unknown') as name,
+                        COUNT(*) as sales,
+                        SUM(t.amount) as revenue
+                    FROM transactions t
+                    LEFT JOIN bundles b ON t.bundle_id = b.id
+                    WHERE t.purpose = 'data_purchase' AND t.status = 'success'
+                    GROUP BY b.name
+                    ORDER BY sales DESC
+                    LIMIT 5
                 `)
             ]);
 
@@ -59,7 +94,20 @@ const adminController = {
                     name: row.network,
                     count: parseInt(row.count)
                 })),
-                recentFunding: recentFundingResult.rows
+                recentFunding: recentFundingResult.rows,
+                monthlyRevenue: monthlyRevenueResult.rows.map(row => ({
+                    month: row.month,
+                    revenue: Number(row.revenue)
+                })),
+                userGrowth: userGrowthResult.rows.map(row => ({
+                    date: row.date,
+                    count: parseInt(row.count)
+                })),
+                bundlePerformance: bundlePerformanceResult.rows.map(row => ({
+                    name: row.name,
+                    sales: parseInt(row.sales),
+                    revenue: Number(row.revenue)
+                }))
             });
         } catch (error) {
             res.status(500).json({ message: 'Failed to fetch admin stats', error: error.message });
