@@ -407,6 +407,39 @@ const checkOrderStatus = async (orderIdOrReference) => {
 };
 
 /**
+ * Fetch recent order history from Portal-02
+ */
+const fetchOrderHistory = async (page = 1, limit = 50) => {
+    const portal02ApiKey = process.env.PORTAL02_API_KEY;
+
+    if (!portal02ApiKey) {
+        return { success: false, error: 'API key not configured' };
+    }
+
+    try {
+        console.log(`🔍 Fetching Portal-02 order history (Page: ${page}, Limit: ${limit})...`);
+
+        const response = await makePortal02Request('GET', `/orders?page=${page}&limit=${limit}`, portal02ApiKey);
+
+        if (!response.ok || !response.data?.success) {
+            return {
+                success: false,
+                error: response.data?.error || `Failed to fetch order history (HTTP ${response.status})`
+            };
+        }
+
+        return {
+            success: true,
+            orders: response.data.orders || [],
+            pagination: response.data.pagination
+        };
+    } catch (error) {
+        console.error('❌ Portal-02 order history fetch error:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
  * Robustly extract provider order ID from API response
  * Scans for numeric/string IDs while avoiding our local UUID and status keywords.
  * Performs a two-pass search:
@@ -517,5 +550,6 @@ module.exports = {
     findOffer,
     checkBalance,
     checkOrderStatus,
+    fetchOrderHistory,
     extractProviderId
 };

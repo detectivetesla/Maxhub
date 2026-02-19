@@ -59,7 +59,15 @@ const orderController = {
             await client.query('COMMIT');
 
             try {
-                await portal02Service.purchaseData(bundle.network, bundle.data_amount, phoneNumber, bundle.provider_code, reference);
+                const portalResponse = await portal02Service.purchaseData(bundle.network, bundle.data_amount, phoneNumber, bundle.provider_code, reference);
+
+                // Update transaction with provider IDs if available
+                if (portalResponse && (portalResponse.orderId || portalResponse.reference)) {
+                    await client.query(
+                        'UPDATE transactions SET provider_order_id = $1, provider_reference = $2 WHERE reference = $3',
+                        [portalResponse.orderId ? String(portalResponse.orderId) : null, portalResponse.reference || null, reference]
+                    );
+                }
 
                 res.json({ message: 'Purchase initiated', reference });
 

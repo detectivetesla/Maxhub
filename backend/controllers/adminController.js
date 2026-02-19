@@ -488,6 +488,68 @@ const adminController = {
         } finally {
             client.release();
         }
+    },
+
+    syncAllOrders: async (req, res) => {
+        try {
+            const { page = 1, limit = 50 } = req.query;
+            const syncResult = await portal02Service.syncOrders(page, limit);
+
+            if (!syncResult.success) {
+                throw new Error(syncResult.error || 'Failed to fetch order history from Portal-02');
+            }
+
+            const portalOrders = syncResult.orders || [];
+            let updatedCount = 0;
+
+            // Iterate and reconcile
+            for (const po of portalOrders) {
+                const portalStatus = String(po.status || '').toLowerCase();
+
+                // Map portal status to our local status
+                let localStatus = 'processing';
+                if (['delivered', 'completed', 'success', 'fulfilled', 'resolved', 'delivered_callback'].includes(portalStatus)) {
+                    localStatus = 'success';
+                } else if (['failed', 'error', 'cancelled', 'rejected', 'failed_callback', 'refunded'].includes(portalStatus)) {
+                    localStatus = 'failed';
+                }
+
+                // Match by reference (preferred) or order ID
+                const result = await db.query(
+                    `UPDATE transactions 
+                     SET status = $1, 
+                         provider_order_id = $2,
+                         metadata = metadata || $3
+                     WHERE (reference = $4 OR provider_order_id = $2 OR provider_reference = $4)
+                     AND status != $1`,
+                    [
+                        localStatus,
+                        String(po.orderId || po._id),
+                        JSON.stringify({ last_sync: new Date().toISOString(), portal_status: portalStatus }),
+                        po.reference || po.orderId
+                    ]
+                );
+
+                if (result.rowCount > 0) {
+                    updatedCount += result.rowCount;
+                }
+            }
+
+            // Log the sync action
+            await db.query(
+                'INSERT INTO activity_logs (user_id, type, action) VALUES ($1, $2, $3)',
+                [req.user.id, 'system', `Manually synchronized ${portalOrders.length} orders from Portal-02. Updated ${updatedCount} local records.`]
+            );
+
+            res.json({
+                message: `Synchronization complete. Updated ${updatedCount} transactions.`,
+                syncedCount: portalOrders.length,
+                updatedCount
+            });
+        } catch (error) {
+            console.error('Order Sync Error:', error);
+            res.status(500).json({ message: 'Failed to synchronize orders', error: error.message });
+        }
     }
 };
 

@@ -69,6 +69,22 @@ const portal02Service = {
     },
 
     /**
+     * Fetch Portal-02 order history for reconciliation
+     */
+    syncOrders: async (page = 1, limit = 50) => {
+        try {
+            const result = await portal02Utils.fetchOrderHistory(page, limit);
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to sync orders from Portal-02');
+            }
+            return result;
+        } catch (error) {
+            console.error('Portal02 Sync Orders Error:', error.message);
+            throw error;
+        }
+    },
+
+    /**
      * Check Portal-02 account balance
      */
     checkBalance: async () => {

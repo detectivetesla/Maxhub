@@ -9,8 +9,13 @@ const portal02Controller = {
         if (event === 'order.status.updated') {
             try {
                 let localStatus = 'processing';
-                if (status === 'delivered') localStatus = 'success';
-                if (['failed', 'cancelled', 'refunded'].includes(status)) localStatus = 'failed';
+                const statusLower = String(status).toLowerCase();
+
+                if (['delivered', 'completed', 'success', 'fulfilled', 'resolved', 'delivered_callback'].includes(statusLower)) {
+                    localStatus = 'success';
+                } else if (['failed', 'cancelled', 'refunded', 'error', 'failed_callback'].includes(statusLower)) {
+                    localStatus = 'failed';
+                }
 
                 await db.query(
                     'UPDATE transactions SET status = $1, metadata = metadata || $2 WHERE reference = $3 OR reference = $4',

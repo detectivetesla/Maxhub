@@ -79,6 +79,20 @@ const AdminTransactionsPage: React.FC = () => {
         setSelectedTx(tx);
     };
 
+    const handleSync = async () => {
+        setLoading(true);
+        try {
+            const response = await api.post('/admin/orders/sync');
+            alert(response.data.message);
+            fetchTransactions();
+        } catch (error: any) {
+            console.error('Sync failed', error);
+            alert(error.response?.data?.message || 'Synchronization failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-140px)] animate-in fade-in slide-in-from-bottom-6 duration-700">
             {/* Main Content Area */}
@@ -94,10 +108,19 @@ const AdminTransactionsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3">
                         <button
+                            onClick={handleSync}
+                            title="Sync with Portal-02"
+                            disabled={loading}
+                            className="p-3.5 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 transition-all group flex items-center gap-2"
+                        >
+                            <RefreshCw className={cn("w-5 h-5 text-blue-500 transition-colors", loading && "animate-spin")} />
+                            <span className="text-[10px] font-black uppercase tracking-widest hidden md:inline">Sync Portal</span>
+                        </button>
+                        <button
                             onClick={fetchTransactions}
                             className="p-3.5 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 transition-all group"
                         >
-                            <RefreshCw className={cn("w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors", loading && "animate-spin")} />
+                            <RefreshCw className={cn("w-5 h-5 text-slate-400 group-hover:text-amber-500 transition-colors", loading && "animate-spin")} />
                         </button>
                         <Button className="rounded-2xl px-6 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black flex items-center gap-2 shadow-xl shadow-slate-900/10 dark:shadow-none hover:translate-y-[-2px] transition-all">
                             <Download className="w-4 h-4" />
