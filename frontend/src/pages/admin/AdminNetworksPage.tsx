@@ -3,7 +3,7 @@ import {
     Globe, Shield, Zap, Activity,
     RefreshCw, AlertCircle, CheckCircle2,
     Database, Server, Wallet, Info,
-    ArrowRight, Settings2, Signal
+    ArrowRight, Settings2, Signal, Save
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import api from '@/utils/api';
@@ -15,6 +15,16 @@ const AdminNetworksPage: React.FC = () => {
     const [settings, setSettings] = useState<any>({});
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
+
+    // Modal State
+    const [configModalOpen, setConfigModalOpen] = useState(false);
+    const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
+    const [modalData, setModalData] = useState({
+        maintenance_mode: false,
+        is_active: true,
+        label: ''
+    });
+    const [updating, setUpdating] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -49,6 +59,48 @@ const AdminNetworksPage: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    const openConfig = (network: string) => {
+        const netData = networks.find(n => n.network === network) || { active_count: 0 };
+        setSelectedNetwork(network);
+        setModalData({
+            maintenance_mode: settings[`${network.toLowerCase()}_maintenance_mode`] === 'true',
+            is_active: netData.active_count > 0,
+            label: settings[`${network.toLowerCase()}_label`] || `Core Infrastructure for ${network}`
+        });
+        setConfigModalOpen(true);
+    };
+
+    const handleUpdateSettings = async () => {
+        if (!selectedNetwork) return;
+        setUpdating(true);
+        try {
+            // Update network activation status if it changed
+            const netData = networks.find(n => n.network === selectedNetwork);
+            const currentIsActive = (netData?.active_count || 0) > 0;
+
+            if (currentIsActive !== modalData.is_active) {
+                await api.post('/admin/networks/toggle-status', {
+                    network: selectedNetwork,
+                    is_active: modalData.is_active
+                });
+            }
+
+            // Update maintenance mode and labeling
+            await api.post('/admin/networks/settings', {
+                network: selectedNetwork,
+                maintenance_mode: modalData.maintenance_mode,
+                label: modalData.label
+            });
+
+            await fetchData();
+            setConfigModalOpen(false);
+        } catch (error) {
+            console.error('Failed to update config', error);
+        } finally {
+            setUpdating(false);
+        }
+    };
 
     const networkThemes: Record<string, any> = {
         MTN: { color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
@@ -176,7 +228,10 @@ const AdminNetworksPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <Button className="w-full mt-8 py-4 bg-slate-50 dark:bg-white/5 hover:bg-blue-500 hover:text-white text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all group/btn">
+                            <Button
+                                onClick={() => openConfig(net)}
+                                className="w-full mt-8 py-4 bg-slate-50 dark:bg-white/5 hover:bg-blue-500 hover:text-white text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all group/btn"
+                            >
                                 Configure Network
                                 <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
                             </Button>
@@ -216,6 +271,111 @@ const AdminNetworksPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Configuration Modal */}
+            {configModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div
+                        className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[3rem] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-10 space-y-8">
+                            <header className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Configure {selectedNetwork}</h3>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Infrastructure Control Panel</p>
+                                </div>
+                                <div className={cn(
+                                    "w-14 h-14 rounded-2xl flex items-center justify-center bg-blue-500/10 border border-blue-500/20"
+                                )}>
+                                    <Settings2 className="w-7 h-7 text-blue-500" />
+                                </div>
+                            </header>
+
+                            <div className="space-y-6">
+                                {/* Maintenance Mode */}
+                                <div className="flex items-center justify-between p-6 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                                            <AlertCircle className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white">Maintenance Mode</p>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase">Blocks all purchases for this network</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setModalData({ ...modalData, maintenance_mode: !modalData.maintenance_mode })}
+                                        className={cn(
+                                            "w-12 h-6 rounded-full transition-all relative",
+                                            modalData.maintenance_mode ? "bg-orange-500" : "bg-slate-200 dark:bg-white/10"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-4 h-4 rounded-full bg-white transition-all",
+                                            modalData.maintenance_mode ? "right-1" : "left-1"
+                                        )} />
+                                    </button>
+                                </div>
+
+                                {/* Availability Toggle */}
+                                <div className="flex items-center justify-between p-6 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                            <CheckCircle2 className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white">Active Status</p>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase">Enable/Disable all network bundles</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setModalData({ ...modalData, is_active: !modalData.is_active })}
+                                        className={cn(
+                                            "w-12 h-6 rounded-full transition-all relative",
+                                            modalData.is_active ? "bg-emerald-500" : "bg-slate-200 dark:bg-white/10"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-4 h-4 rounded-full bg-white transition-all",
+                                            modalData.is_active ? "right-1" : "left-1"
+                                        )} />
+                                    </button>
+                                </div>
+
+                                {/* Custom Label */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Network Label</label>
+                                    <input
+                                        type="text"
+                                        value={modalData.label}
+                                        onChange={(e) => setModalData({ ...modalData, label: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-blue-500/50 transition-all"
+                                        placeholder="Enter network status label..."
+                                    />
+                                </div>
+                            </div>
+
+                            <footer className="flex items-center gap-4 pt-4">
+                                <Button
+                                    onClick={() => setConfigModalOpen(false)}
+                                    className="flex-1 py-4 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleUpdateSettings}
+                                    disabled={updating}
+                                    className="flex-[2] py-4 bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+                                >
+                                    {updating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    {updating ? 'Saving...' : 'Save Configuration'}
+                                </Button>
+                            </footer>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

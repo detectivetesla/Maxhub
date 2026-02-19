@@ -376,6 +376,13 @@ const adminController = {
                 return acc;
             }, {});
 
+            // Ensure maintenance modes are initialized if they don't exist
+            ['mtn', 'telecel', 'airteltigo'].forEach(net => {
+                if (!settings[`${net}_maintenance_mode`]) {
+                    settings[`${net}_maintenance_mode`] = 'false';
+                }
+            });
+
             res.json({
                 networks: networksResult.rows,
                 settings: settings
@@ -421,6 +428,63 @@ const adminController = {
         } catch (error) {
             await client.query('ROLLBACK');
             res.status(500).json({ message: 'Sync failed', error: error.message });
+        } finally {
+            client.release();
+        }
+    },
+
+    toggleNetworkStatus: async (req, res) => {
+        const { network, is_active } = req.body;
+        try {
+            await db.query(
+                'UPDATE bundles SET is_active = $1 WHERE network = $2',
+                [is_active, network]
+            );
+
+            // Log activity
+            await db.query(
+                'INSERT INTO activity_logs (user_id, type, action) VALUES ($1, $2, $3)',
+                [req.user.id, 'system', `${is_active ? 'Activated' : 'Deactivated'} all bundles for ${network}`]
+            );
+
+            res.json({ message: `${network} bundles ${is_active ? 'activated' : 'deactivated'} successfully` });
+        } catch (error) {
+            res.status(500).json({ message: 'Failed to update network status', error: error.message });
+        }
+    },
+
+    updateNetworkSettings: async (req, res) => {
+        const { network, maintenance_mode, label } = req.body;
+        const client = await db.getClient();
+        try {
+            await client.query('BEGIN');
+
+            // Update maintenance mode in settings
+            const maintenanceKey = `${network.toLowerCase()}_maintenance_mode`;
+            await client.query(
+                'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+                [maintenanceKey, maintenance_mode.toString()]
+            );
+
+            // Update label/description if provided
+            if (label) {
+                const labelKey = `${network.toLowerCase()}_label`;
+                await client.query(
+                    'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+                    [labelKey, label]
+                );
+            }
+
+            await client.query(
+                'INSERT INTO activity_logs (user_id, type, action) VALUES ($1, $2, $3)',
+                [req.user.id, 'system', `Updated settings for ${network}`]
+            );
+
+            await client.query('COMMIT');
+            res.json({ message: `Settings for ${network} updated successfully` });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            res.status(500).json({ message: 'Failed to update network settings', error: error.message });
         } finally {
             client.release();
         }

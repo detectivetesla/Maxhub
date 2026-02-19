@@ -27,5 +27,7 @@ router.get('/logs', adminController.getLogs);
 router.get('/networks', adminController.getNetworks);
 router.get('/provider-health', adminController.getProviderHealth);
 router.post('/sync-offers', adminController.syncProviderOffers);
+router.post('/networks/toggle-status', adminController.toggleNetworkStatus);
+router.post('/networks/settings', adminController.updateNetworkSettings);
 
 module.exports = router;
