@@ -84,6 +84,14 @@ const authController = {
             const user = result.rows[0];
 
             if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+                logActivity({
+                    userId: user ? user.id : null,
+                    type: 'auth',
+                    level: 'error',
+                    action: 'Failed Login Attempt',
+                    message: `Invalid credentials for: ${email}`,
+                    req
+                });
                 return res.status(401).json({ message: 'Invalid email or password' });
             }
 
