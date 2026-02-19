@@ -12,6 +12,7 @@ import Button from '@/components/Button';
 const AdminNetworksPage: React.FC = () => {
     const [networks, setNetworks] = useState<any[]>([]);
     const [providerHealth, setProviderHealth] = useState<any>(null);
+    const [settings, setSettings] = useState<any>({});
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
 
@@ -23,6 +24,7 @@ const AdminNetworksPage: React.FC = () => {
                 api.get('/admin/provider-health')
             ]);
             setNetworks(networksRes.data.networks);
+            setSettings(networksRes.data.settings || {});
             setProviderHealth(healthRes.data);
         } catch (error) {
             console.error('Failed to fetch network data', error);
@@ -117,17 +119,17 @@ const AdminNetworksPage: React.FC = () => {
                             </div>
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Latency</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">API Health</p>
                             <div className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white">
                                 <Zap className="w-5 h-5 text-amber-500" />
-                                142ms
+                                {providerHealth?.status === 'online' ? 'Stable' : 'Unknown'}
                             </div>
                         </div>
                         <div className="hidden md:block">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Uptime (24h)</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Connection</p>
                             <div className="flex items-center gap-2 text-xl font-black text-emerald-500">
                                 <CheckCircle2 className="w-5 h-5" />
-                                99.9%
+                                Secure
                             </div>
                         </div>
                     </div>
@@ -139,6 +141,7 @@ const AdminNetworksPage: React.FC = () => {
                 {['MTN', 'Telecel', 'AirtelTigo'].map((net) => {
                     const data = networks.find(n => n.network === net) || { bundle_count: 0, active_count: 0 };
                     const theme = networkThemes[net] || { color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20' };
+                    const healthPercentage = data.bundle_count > 0 ? Math.round((data.active_count / data.bundle_count) * 100) : 0;
 
                     return (
                         <div key={net} className="bg-white dark:bg-white/5 p-8 rounded-[3rem] border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all group">
@@ -147,9 +150,12 @@ const AdminNetworksPage: React.FC = () => {
                                     <Signal className={cn("w-7 h-7", theme.color)} />
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1 justify-end">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                        Active
+                                    <span className={cn(
+                                        "text-[10px] font-black uppercase tracking-widest flex items-center gap-1 justify-end",
+                                        healthPercentage > 0 ? "text-emerald-500" : "text-slate-400"
+                                    )}>
+                                        <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", healthPercentage > 0 ? "bg-emerald-500" : "bg-slate-400")} />
+                                        {healthPercentage > 0 ? 'Active' : 'No Bundles'}
                                     </span>
                                 </div>
                             </div>
@@ -163,8 +169,10 @@ const AdminNetworksPage: React.FC = () => {
                                     <p className="text-xl font-black text-slate-900 dark:text-white">{data.bundle_count}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</p>
-                                    <p className="text-xl font-black text-emerald-500">100%</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ready</p>
+                                    <p className={cn("text-xl font-black", healthPercentage === 0 ? "text-slate-400" : healthPercentage === 100 ? "text-emerald-500" : "text-amber-500")}>
+                                        {healthPercentage}%
+                                    </p>
                                 </div>
                             </div>
 
@@ -193,15 +201,17 @@ const AdminNetworksPage: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl">
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Global Fee</p>
-                            <p className="text-sm font-black">2.0%</p>
+                            <p className="text-sm font-black">{(parseFloat(settings.transaction_fee_percentage || '0.02') * 100).toFixed(1)}%</p>
                         </div>
                         <div className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl">
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Auto-Sync</p>
-                            <p className="text-sm font-black text-emerald-400">Enabled</p>
+                            <p className={cn("text-sm font-black", settings.auto_sync === 'true' ? "text-emerald-400" : "text-slate-400")}>
+                                {settings.auto_sync === 'true' ? 'Enabled' : 'Disabled'}
+                            </p>
                         </div>
                         <div className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl">
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Callback URL</p>
-                            <p className="text-sm font-black truncate max-w-[150px]">bytebeacon.online/api/webhooks/portal02</p>
+                            <p className="text-sm font-black truncate max-w-[150px]">Maxhub-nu.vercel.com/api/webhooks/portal02</p>
                         </div>
                     </div>
                 </div>

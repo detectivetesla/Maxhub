@@ -358,15 +358,28 @@ const adminController = {
     // Network Management
     getNetworks: async (req, res) => {
         try {
-            const result = await db.query(`
-                SELECT 
-                    network, 
-                    COUNT(*) as bundle_count,
-                    COUNT(CASE WHEN is_active = true THEN 1 END) as active_count
-                FROM bundles 
-                GROUP BY network
-            `);
-            res.json({ networks: result.rows });
+            const [networksResult, settingsResult] = await Promise.all([
+                db.query(`
+                    SELECT 
+                        network, 
+                        COUNT(*) as bundle_count,
+                        COUNT(CASE WHEN is_active = true THEN 1 END) as active_count
+                    FROM bundles 
+                    GROUP BY network
+                `),
+                db.query('SELECT key, value FROM settings')
+            ]);
+
+            // Convert settings array to an object for easier frontend consumption
+            const settings = settingsResult.rows.reduce((acc, curr) => {
+                acc[curr.key] = curr.value;
+                return acc;
+            }, {});
+
+            res.json({
+                networks: networksResult.rows,
+                settings: settings
+            });
         } catch (error) {
             res.status(500).json({ message: 'Failed to fetch networks', error: error.message });
         }

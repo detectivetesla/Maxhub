@@ -257,7 +257,7 @@ const placeDataOrder = async ({ network, dataAmount, recipientPhone, transaction
             if (isLocal) {
                 // If we're on a live domain, we should prefer that even if .env is missing it
                 // Using the primary domain without forcing 'www' unless already present
-                baseUrl = 'https://bytebeacon.online/api';
+                baseUrl = 'https://Maxhub-nu.vercel.com/api';
             }
 
             // Format: /api/webhooks/portal02
