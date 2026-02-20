@@ -40,7 +40,8 @@ const AdminLogin: React.FC = () => {
             }
 
             login(response.data);
-            navigate('/admin');
+            const adminPath = import.meta.env.VITE_ADMIN_PATH || '/admin';
+            navigate(adminPath);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Authentication failed. Please check your credentials.');
         } finally {

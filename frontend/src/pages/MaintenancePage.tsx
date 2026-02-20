@@ -40,14 +40,7 @@ const MaintenancePage: React.FC = () => {
                     <span>Try Again</span>
                 </button>
 
-                <div className="mt-12">
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
-                    >
-                        Admin Login
-                    </button>
-                </div>
+
             </div>
         </div>
     );

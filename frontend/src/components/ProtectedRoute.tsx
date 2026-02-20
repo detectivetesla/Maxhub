@@ -20,15 +20,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
         );
     }
 
+    const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH || '/admin';
+
     if (!isAuthenticated) {
         // Redirect to login but save the current location they were trying to go to
-        const loginPath = location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
+        const loginPath = location.pathname.startsWith(ADMIN_PATH) ? `${ADMIN_PATH}/login` : '/login';
         return <Navigate to={loginPath} state={{ from: location }} replace />;
     }
 
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
         // Role not allowed, redirect to appropriate dashboard
-        const redirectPath = user.role === 'admin' ? '/admin' : '/dashboard';
+        const redirectPath = user.role === 'admin' ? ADMIN_PATH : '/dashboard';
         return <Navigate to={redirectPath} replace />;
     }
 

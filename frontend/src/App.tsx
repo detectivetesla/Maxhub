@@ -24,7 +24,8 @@ const AuthWrapper: React.FC<{ type: 'signin' | 'signup' }> = ({ type }) => {
     const { isAuthenticated, user } = useAuth();
 
     if (isAuthenticated) {
-        return <Navigate to={user?.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+        const adminPath = import.meta.env.VITE_ADMIN_PATH || '/admin';
+        return <Navigate to={user?.role === 'admin' ? adminPath : '/dashboard'} replace />;
     }
 
     return <AuthPage type={currentType} onToggle={() => setCurrentType(currentType === 'signin' ? 'signup' : 'signin')} />;
@@ -44,6 +45,9 @@ import AdminTransactionsPage from '@/pages/admin/AdminTransactionsPage';
 import AdminEmailPage from '@/pages/admin/AdminEmailPage';
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
 import AdminNetworksPage from '@/pages/admin/AdminNetworksPage';
+
+// Get admin path from env or default to /admin
+const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH || '/admin';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -67,8 +71,8 @@ const AppRoutes: React.FC = () => {
                 <Route path="inbox" element={<Inboxes />} />
                 <Route path="notifications" element={<Notifications />} />
             </Route>
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={
+            <Route path={`${ADMIN_PATH}/login`} element={<AdminLogin />} />
+            <Route path={ADMIN_PATH} element={
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout />
                 </ProtectedRoute>
