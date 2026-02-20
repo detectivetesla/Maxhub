@@ -34,14 +34,18 @@ const AdminPage: React.FC = () => {
 
     const fetchAdminData = async () => {
         try {
-            const [statsRes, dataRes] = await Promise.all([
+            const [statsRes, dataRes, settingsRes] = await Promise.all([
                 api.get('/admin/stats'),
-                api.get('/admin/recent-data')
+                api.get('/admin/recent-data'),
+                api.get('/admin/settings')
             ]);
 
             setStatsData(statsRes.data);
             setRecentOrders(dataRes.data.recentOrders);
             setNewUsers(dataRes.data.newUsers);
+            if (settingsRes.data.settings) {
+                setIsMaintenanceMode(settingsRes.data.settings.maintenance_mode === 'true');
+            }
         } catch (error) {
             console.error('Failed to fetch admin data', error);
         } finally {
@@ -99,10 +103,22 @@ const AdminPage: React.FC = () => {
                 </div>
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md mb-4">
-                            <ShieldCheck className="w-3 h-3" />
-                            <span>System Administrator</span>
+                        <div className="flex flex-wrap items-center gap-3 mb-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                                <ShieldCheck className="w-3 h-3" />
+                                <span>System Administrator</span>
+                            </div>
+
+                            {/* Maintenance Status Widget */}
+                            <Link to="settings" className={cn(
+                                "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md transition-all hover:scale-105 cursor-pointer",
+                                isMaintenanceMode ? "bg-red-500 text-white shadow-lg shadow-red-500/20" : "bg-emerald-500/20 text-white border border-white/10 hover:bg-emerald-500/30"
+                            )}>
+                                <div className={cn("w-2 h-2 rounded-full", isMaintenanceMode ? "bg-white animate-pulse" : "bg-emerald-400")} />
+                                <span>{isMaintenanceMode ? "Maintenance Mode Active" : "System Operational"}</span>
+                            </Link>
                         </div>
+
                         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight mb-3 sm:mb-4">
                             Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'}!
                         </h1>

@@ -3,11 +3,6 @@ const db = require('../db');
 const jwt = require('jsonwebtoken');
 
 const checkMaintenanceMode = async (req, res, next) => {
-    // MAINTENANCE MODE SUSPENDED TEMPORARILY
-    // Allowing all traffic to pass through
-    return next();
-
-    /* 
     try {
         // Normalize path to handle /api prefix
         const path = req.path.replace(/^\/api/, '');
@@ -19,7 +14,7 @@ const checkMaintenanceMode = async (req, res, next) => {
         }
 
         const result = await db.query('SELECT value FROM settings WHERE key = $1', ['maintenance_mode']);
-        
+
         if (result.rows.length > 0 && result.rows[0].value === 'true') {
             // Check if user is admin via token
             const authHeader = req.headers.authorization;
@@ -48,7 +43,6 @@ const checkMaintenanceMode = async (req, res, next) => {
         console.error('Maintenance Check Error:', error);
         next(); // Proceed on error to avoid blocking completely if DB fails
     }
-    */
 };
 
 module.exports = checkMaintenanceMode;
