@@ -1,6 +1,6 @@
 export const APP_CONFIG = {
     TRANSACTION_FEE_PERCENTAGE: parseFloat(import.meta.env.VITE_FEE_PERCENTAGE) || 0.00,
-    MIN_DEPOSIT_GHC: parseFloat(import.meta.env.VITE_MIN_DEPOSIT) || 1.00,
+    MIN_DEPOSIT_GHC: parseFloat(import.meta.env.VITE_MIN_DEPOSIT) || 6.00,
     CURRENCY: import.meta.env.VITE_CURRENCY || 'GH₵',
     CURRENCY_SYMBOL: import.meta.env.VITE_CURRENCY_SYMBOL || '₵',
     SYSTEM_NAME: import.meta.env.VITE_SYSTEM_NAME || 'MaxHub',
