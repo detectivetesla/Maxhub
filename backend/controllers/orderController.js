@@ -53,14 +53,14 @@ const orderController = {
 
             await client.query(
                 'INSERT INTO transactions (user_id, type, purpose, amount, status, reference, bundle_id, recipient_phone, metadata, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-                [userId, 'debit', 'data_purchase', price, 'queued', reference, bundleId, phoneNumber, JSON.stringify(metadata), 'wallet']
+                [userId, 'debit', 'data_purchase', price, 'processing', reference, bundleId, phoneNumber, JSON.stringify(metadata), 'wallet']
             );
 
             await client.query('UPDATE users SET wallet_balance = wallet_balance - $1 WHERE id = $2', [price, userId]);
             await client.query('COMMIT');
 
             // 1. Respond to user immediately
-            res.json({ message: 'Order placed successfully and is being processed.', reference, status: 'queued' });
+            res.json({ message: 'Order placed successfully and is being processed.', reference, status: 'processing' });
 
             // 2. Trigger background processing immediately (non-blocking)
             queueService.processOrderQueue().catch(err => console.error('Immediate Queue Trigger Error:', err));

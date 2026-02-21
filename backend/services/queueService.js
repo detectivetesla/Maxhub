@@ -25,7 +25,8 @@ const processOrderQueue = async () => {
             `SELECT t.*, b.name as bundle_name, b.network, b.data_amount, b.provider_code 
              FROM transactions t 
              JOIN bundles b ON t.bundle_id = b.id
-             WHERE t.status = 'queued' 
+             WHERE t.status = 'processing' 
+             AND t.provider_order_id IS NULL
              AND t.retries < 5
              ORDER BY t.created_at ASC 
              LIMIT 5`
