@@ -20,6 +20,7 @@ interface AdminSidebarProps {
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) => {
     const { user, logout } = useAuth();
     const [pendingCount, setPendingCount] = useState<number>(0);
+    const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH || '/admin';
 
     const fetchPendingCount = async () => {
         try {
@@ -60,43 +61,43 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
         {
             title: 'General',
             items: [
-                { icon: LayoutGrid, label: 'Dashboard', path: '/admin', color: 'text-blue-500', end: true },
-                { icon: BarChart2, label: 'Analytics', path: '/admin/analytics', color: 'text-indigo-500' },
+                { icon: LayoutGrid, label: 'Dashboard', path: ADMIN_PATH, color: 'text-blue-500', end: true },
+                { icon: BarChart2, label: 'Analytics', path: `${ADMIN_PATH}/analytics`, color: 'text-indigo-500' },
             ]
         },
         {
             title: 'Management',
             items: [
-                { icon: Users, label: 'Users', path: '/admin/users', color: 'text-blue-500' },
+                { icon: Users, label: 'Users', path: `${ADMIN_PATH}/users`, color: 'text-blue-500' },
                 {
                     icon: ShoppingBag,
                     label: 'Orders',
-                    path: '/admin/orders',
+                    path: `${ADMIN_PATH}/orders`,
                     color: 'text-orange-500',
                     badge: pendingCount > 0 ? pendingCount.toString() : undefined
                 },
-                { icon: Database, label: 'Data Plans', path: '/admin/bundles', color: 'text-blue-500' },
+                { icon: Database, label: 'Data Plans', path: `${ADMIN_PATH}/bundles`, color: 'text-blue-500' },
             ]
         },
         {
             title: 'Finance',
             items: [
-                { icon: ArrowLeftRight, label: 'Transactions', path: '/admin/transactions', color: 'text-amber-500' },
+                { icon: ArrowLeftRight, label: 'Transactions', path: `${ADMIN_PATH}/transactions`, color: 'text-amber-500' },
             ]
         },
         {
             title: 'System',
             items: [
-                { icon: Globe, label: 'Networks', path: '/admin/networks', color: 'text-cyan-500' },
-                { icon: Terminal, label: 'API Settings', path: '/admin/developer', color: 'text-slate-500' },
-                { icon: Activity, label: 'Activity Log', path: '/admin/activity-log', color: 'text-blue-500' },
+                { icon: Globe, label: 'Networks', path: `${ADMIN_PATH}/networks`, color: 'text-cyan-500' },
+                { icon: Terminal, label: 'API Settings', path: `${ADMIN_PATH}/developer`, color: 'text-slate-500' },
+                { icon: Activity, label: 'Activity Log', path: `${ADMIN_PATH}/activity-log`, color: 'text-blue-500' },
             ]
         },
         {
             title: 'Communication',
             items: [
-                { icon: Mail, label: 'Send Email', path: '/admin/email', color: 'text-pink-500' },
-                { icon: Settings, label: 'System Settings', path: '/admin/settings', color: 'text-slate-400' },
+                { icon: Mail, label: 'Send Email', path: `${ADMIN_PATH}/email`, color: 'text-pink-500' },
+                { icon: Settings, label: 'System Settings', path: `${ADMIN_PATH}/settings`, color: 'text-slate-400' },
             ]
         }
     ];
@@ -109,7 +110,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className, isCollapsed }) =
         )}>
             {/* Branding Section */}
             <div className={cn("p-8 pb-4 transition-all shrink-0", isCollapsed && "p-6 flex justify-center")}>
-                <Link to="/admin" className="flex items-center gap-3 group">
+                <Link to={ADMIN_PATH} className="flex items-center gap-3 group">
                     <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shadow-2xl shadow-black/20 group-hover:scale-110 transition-transform">
                         <Shield className="w-6 h-6 text-blue-500" />
                     </div>

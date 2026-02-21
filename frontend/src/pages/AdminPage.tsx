@@ -79,11 +79,13 @@ const AdminPage: React.FC = () => {
         };
     }, []);
 
+    const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH || '/admin';
+
     const stats = [
-        { label: 'TOTAL USERS', value: statsData.totalUsers.toString(), icon: Users, color: 'text-purple-600', bg: 'bg-purple-600', border: 'border-purple-400/50', path: '/admin/users' },
-        { label: "TODAY'S ORDERS", value: statsData.todayOrders.toString(), icon: Database, color: 'text-orange-600', bg: 'bg-orange-500', border: 'border-orange-400/50', path: '/admin/orders' },
-        { label: "TODAY'S REVENUE", value: `GH₵ ${statsData.todayRevenue.toLocaleString()}`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-500', border: 'border-amber-300/50', path: '/admin/analytics' },
-        { label: 'PENDING ORDERS', value: statsData.pendingOrders.toString(), icon: Activity, color: 'text-blue-600', bg: 'bg-blue-600', border: 'border-blue-400/50', isPrimary: true, path: '/admin/orders' },
+        { label: 'TOTAL USERS', value: statsData.totalUsers.toString(), icon: Users, color: 'text-purple-600', bg: 'bg-purple-600', border: 'border-purple-400/50', path: `${ADMIN_PATH}/users` },
+        { label: "TODAY'S ORDERS", value: statsData.todayOrders.toString(), icon: Database, color: 'text-orange-600', bg: 'bg-orange-500', border: 'border-orange-400/50', path: `${ADMIN_PATH}/orders` },
+        { label: "TODAY'S REVENUE", value: `GH₵ ${statsData.todayRevenue.toLocaleString()}`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-500', border: 'border-amber-300/50', path: `${ADMIN_PATH}/analytics` },
+        { label: 'PENDING ORDERS', value: statsData.pendingOrders.toString(), icon: Activity, color: 'text-blue-600', bg: 'bg-blue-600', border: 'border-blue-400/50', isPrimary: true, path: `${ADMIN_PATH}/orders` },
     ];
 
     const getNetworkColor = (network: string) => {
@@ -233,7 +235,7 @@ const AdminPage: React.FC = () => {
                     <div className="bg-[#0B0F19] border border-white/5 rounded-[2.5rem] p-6 sm:p-8 md:p-10">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-xl sm:text-2xl font-black text-white">Recent Orders</h2>
-                            <Link to="/admin/orders" className="text-xs font-black text-blue-500 uppercase tracking-widest hover:underline">
+                            <Link to={`${ADMIN_PATH}/orders`} className="text-xs font-black text-blue-500 uppercase tracking-widest hover:underline">
                                 Full History →
                             </Link>
                         </div>
@@ -254,7 +256,7 @@ const AdminPage: React.FC = () => {
                                     ) : recentOrders.length === 0 ? (
                                         <tr><td colSpan={4} className="py-12 text-center text-slate-500 font-bold">No recent activity detected.</td></tr>
                                     ) : recentOrders.map((order: any) => (
-                                        <tr key={order.id} className="group hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate('/admin/orders')}>
+                                        <tr key={order.id} className="group hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate(`${ADMIN_PATH}/orders`)}>
                                             <td className="py-4 text-[10px] font-mono font-bold text-slate-500 uppercase">#{order.id.slice(0, 8)}</td>
                                             <td className="py-4 font-black text-white text-sm">{order.user_name}</td>
                                             <td className="py-4">

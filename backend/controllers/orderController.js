@@ -1,5 +1,6 @@
 const db = require('../db');
 const portal02Service = require('../services/portal02');
+const queueService = require('../services/queueService');
 const { logActivity } = require('../services/logger');
 const notificationService = require('../services/notificationService');
 
@@ -52,44 +53,36 @@ const orderController = {
 
             await client.query(
                 'INSERT INTO transactions (user_id, type, purpose, amount, status, reference, bundle_id, recipient_phone, metadata, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-                [userId, 'debit', 'data_purchase', price, 'processing', reference, bundleId, phoneNumber, JSON.stringify(metadata), 'wallet']
+                [userId, 'debit', 'data_purchase', price, 'queued', reference, bundleId, phoneNumber, JSON.stringify(metadata), 'wallet']
             );
 
             await client.query('UPDATE users SET wallet_balance = wallet_balance - $1 WHERE id = $2', [price, userId]);
             await client.query('COMMIT');
 
-            try {
-                const portalResponse = await portal02Service.purchaseData(bundle.network, bundle.data_amount, phoneNumber, bundle.provider_code, reference);
+            // 1. Respond to user immediately
+            res.json({ message: 'Order placed successfully and is being processed.', reference, status: 'queued' });
 
-                // Update transaction with provider IDs if available
-                if (portalResponse && (portalResponse.orderId || portalResponse.reference)) {
-                    await client.query(
-                        'UPDATE transactions SET provider_order_id = $1, provider_reference = $2 WHERE reference = $3',
-                        [portalResponse.orderId ? String(portalResponse.orderId) : null, portalResponse.reference || null, reference]
-                    );
-                }
+            // 2. Trigger background processing immediately (non-blocking)
+            queueService.processOrderQueue().catch(err => console.error('Immediate Queue Trigger Error:', err));
 
-                res.json({ message: 'Purchase initiated', reference });
+            // 3. Log and notify (internal)
+            logActivity({
+                userId, type: 'order', level: 'info', action: 'Purchase Queued',
+                message: `User ${userId} queued purchase of ${bundle.network} ${bundle.data_amount} for ${phoneNumber}`,
+                req
+            });
 
-                logActivity({
-                    userId, type: 'order', level: 'info', action: 'Purchase Initiated',
-                    message: `User ${userId} purchased ${bundle.network} ${bundle.data_amount} for ${phoneNumber}`,
-                    req
-                });
+            await notificationService.createNotification({
+                userId, title: 'Order Received',
+                message: `Your order for ${bundle.network} ${bundle.data_amount} has been received and is being processed.`,
+                type: 'info'
+            });
 
-                await notificationService.createNotification({
-                    userId, title: 'Order Placed',
-                    message: `Your order for ${bundle.network} ${bundle.data_amount} has been placed.`,
-                    type: 'info'
-                });
-            } catch (portalError) {
-                res.status(202).json({ message: 'Purchase recorded, processing delayed.', reference });
-            }
         } catch (error) {
             if (client) await client.query('ROLLBACK');
             res.status(500).json({ message: 'Transaction failed', error: error.message });
         } finally {
-            client.release();
+            if (client) client.release();
         }
     }
 };

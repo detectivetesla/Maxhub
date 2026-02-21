@@ -70,7 +70,16 @@ const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
+
+        // Start background services
+        const { startBackgroundJobs } = require('./services/backgroundJobs');
+        startBackgroundJobs();
     });
+} else {
+    // In production (Vercel), we might need a different strategy for background jobs
+    // but we'll initialize them here for standard node environments
+    const { startBackgroundJobs } = require('./services/backgroundJobs');
+    startBackgroundJobs();
 }
 
 module.exports = app;

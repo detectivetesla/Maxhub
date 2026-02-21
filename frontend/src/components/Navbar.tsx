@@ -9,6 +9,7 @@ const Navbar: React.FC = () => {
     const { user, isAuthenticated, logout } = useAuth();
     const [isOpen, setIsOpen] = React.useState(false);
     const navigate = useNavigate();
+    const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH || '/admin';
 
     const handleLogout = () => {
         logout();
@@ -29,7 +30,7 @@ const Navbar: React.FC = () => {
                         <>
                             <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
                             {user?.role === 'admin' && (
-                                <Link to="/admin" className="hover:text-primary transition-colors">Admin</Link>
+                                <Link to={ADMIN_PATH} className="hover:text-primary transition-colors">Admin</Link>
                             )}
                             <button
                                 onClick={handleLogout}
@@ -60,7 +61,7 @@ const Navbar: React.FC = () => {
                         <>
                             <Link to="/dashboard" className="block hover:text-primary" onClick={() => setIsOpen(false)}>Dashboard</Link>
                             {user?.role === 'admin' && (
-                                <Link to="/admin" className="block hover:text-primary" onClick={() => setIsOpen(false)}>Admin</Link>
+                                <Link to={ADMIN_PATH} className="block hover:text-primary" onClick={() => setIsOpen(false)}>Admin</Link>
                             )}
                             <button
                                 onClick={handleLogout}
