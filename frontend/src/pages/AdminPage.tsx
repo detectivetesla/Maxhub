@@ -124,9 +124,16 @@ const AdminPage: React.FC = () => {
                         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight mb-3 sm:mb-4">
                             Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'}!
                         </h1>
-                        <p className="text-blue-100 font-bold max-w-xl text-sm sm:text-base md:text-lg leading-relaxed opacity-80">
+                        <p className="text-blue-100 font-bold max-w-xl text-sm sm:text-base md:text-lg leading-relaxed opacity-80 mb-6">
                             Monitor transactions, manage users, and keep the platform running smoothly with real-time data.
                         </p>
+                        <Link
+                            to={`${ADMIN_PATH}/analytics`}
+                            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-blue-600 font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all group/btn"
+                        >
+                            <BarChart3 className="w-5 h-5 group-hover/btn:rotate-12 transition-transform" />
+                            <span>View Analytics</span>
+                        </Link>
                     </div>
                 </div>
             </div>
