@@ -60,6 +60,8 @@ const processOrderQueue = async () => {
                 let finalStatus = 'processing';
                 if (['delivered', 'completed', 'success', 'fulfilled', 'resolved', 'delivered_callback'].includes(portalStatus)) {
                     finalStatus = 'success';
+                } else if (['failed', 'error', 'cancelled', 'rejected', 'failed_callback', 'refunded'].includes(portalStatus)) {
+                    finalStatus = 'failed';
                 }
 
                 await db.query(
@@ -78,9 +80,9 @@ const processOrderQueue = async () => {
                     ]
                 );
 
-                console.log(`✅ [Queue Service] Order ${order.reference} processed successfully. Status: ${finalStatus}`);
+                console.log(`✅ [Queue Service] Order ${order.reference} processed. Status: ${finalStatus}`);
 
-                // Notification for success
+                // Notifications
                 if (finalStatus === 'success') {
                     await notificationService.createNotification({
                         userId: order.user_id,
@@ -88,10 +90,17 @@ const processOrderQueue = async () => {
                         message: `Your order for ${order.bundle_name} has been delivered.`,
                         type: 'success'
                     });
+                } else if (finalStatus === 'failed') {
+                    await notificationService.createNotification({
+                        userId: order.user_id,
+                        title: 'Order Failed',
+                        message: `Your order for ${order.bundle_name} failed. Status: ${portalStatus}`,
+                        type: 'error'
+                    });
                 }
 
             } catch (error) {
-                console.error(`❌ [Queue Service] Order ${order.reference} failed:`, error.message);
+                console.error(`❌ [Queue Service] Order ${order.reference} error:`, error.message);
 
                 const nextRetry = order.retries + 1;
                 const shouldFailExtremely = nextRetry >= 5;
@@ -105,7 +114,7 @@ const processOrderQueue = async () => {
                     [
                         nextRetry,
                         error.message,
-                        shouldFailExtremely ? 'failed' : 'queued',
+                        shouldFailExtremely ? 'failed' : 'processing',
                         order.id
                     ]
                 );
