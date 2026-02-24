@@ -108,8 +108,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
             {/* Top Header */}
             <header className="relative w-full max-w-[1400px] flex items-center justify-between z-20 mb-4 sm:mb-8 md:mb-12">
                 <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate('/')}>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-                        <LayoutGrid className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-transparent flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="/src/assets/images/logo.png" alt="Logo" className="w-full h-full object-contain brightness-110" />
                     </div>
                     <span className="text-base sm:text-xl font-black text-white tracking-tighter">MaxHub</span>
                 </div>
@@ -149,10 +149,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
                         </div>
                     )}
 
-                    {/* Brand Branding */}
                     <div className="flex items-center justify-center gap-2 mb-8">
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                            <LayoutGrid className="w-4 h-4 text-white" />
+                        <div className="w-8 h-8 rounded-lg bg-transparent flex items-center justify-center">
+                            <img src="/src/assets/images/logo.png" alt="Logo" className="w-full h-full object-contain brightness-110" />
                         </div>
                         <span className="text-xl font-black text-white tracking-tighter">MaxHub</span>
                     </div>
