@@ -99,11 +99,14 @@ const AppRoutes: React.FC = () => {
     );
 };
 
+import WhatsAppButton from '@/components/WhatsAppButton';
+
 const App: React.FC = () => {
     return (
         <Router>
             <AuthProvider>
                 <AppRoutes />
+                <WhatsAppButton />
             </AuthProvider>
         </Router>
     );

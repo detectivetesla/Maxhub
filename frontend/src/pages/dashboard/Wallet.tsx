@@ -192,6 +192,18 @@ const Wallet: React.FC = () => {
                                     />
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-700 font-bold text-xl">{APP_CONFIG.CURRENCY_SYMBOL}</div>
                                 </div>
+                                {amount && Number(amount) >= APP_CONFIG.MIN_DEPOSIT_GHC && (
+                                    <div className="mt-4 p-4 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-slate-500 uppercase">Service Fee (3%)</span>
+                                            <span className="font-black text-slate-900 dark:text-white">₵{(Number(amount) * APP_CONFIG.TRANSACTION_FEE_PERCENTAGE).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-white/10">
+                                            <span className="text-sm font-black text-slate-900 dark:text-white uppercase">Total to Pay</span>
+                                            <span className="text-xl font-black text-primary">₵{(Number(amount) * (1 + APP_CONFIG.TRANSACTION_FEE_PERCENTAGE)).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <Button

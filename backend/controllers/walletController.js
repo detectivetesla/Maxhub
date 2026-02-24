@@ -16,8 +16,9 @@ const initializeDeposit = async (req, res) => {
             });
         }
 
-        const fee = 0;
-        const totalAmount = Number(amount) + Number(fee);
+        const feePercentage = CONFIG.TRANSACTION_FEE_PERCENTAGE;
+        const fee = Number(amount) * feePercentage;
+        const totalAmount = Number(amount) + fee;
 
         const metadata = {
             user_id: userId,

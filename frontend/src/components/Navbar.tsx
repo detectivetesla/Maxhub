@@ -20,8 +20,14 @@ const Navbar: React.FC = () => {
         <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10 px-6 py-4">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <Database className="text-primary w-8 h-8 fill-primary" />
-                    <span className="text-xl font-bold tracking-tight">{APP_CONFIG.SYSTEM_NAME}</span>
+                    <img
+                        src="/src/assets/images/logo.png"
+                        alt="Maxhub Logo"
+                        className="w-10 h-10 object-contain brightness-110 contrast-110"
+                    />
+                    <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                        {APP_CONFIG.SYSTEM_NAME}
+                    </span>
                 </Link>
 
                 {/* Desktop Menu */}
