@@ -95,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose, isCollapsed }) =>
                     isCollapsed && "justify-center px-0 mb-6"
                 )}>
                     <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center transition-transform group-hover:scale-110 shrink-0">
-                        <img src="/src/assets/images/logo.png" alt="Logo" className="w-full h-full object-contain brightness-110" />
+                        <img src="/logos/Logo.jpg" alt="Logo" className="w-full h-full object-contain brightness-110" />
                     </div>
                     {!isCollapsed && (
                         <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white truncate">MaxHub.</span>

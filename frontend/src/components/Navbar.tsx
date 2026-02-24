@@ -21,7 +21,7 @@ const Navbar: React.FC = () => {
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <img
-                        src="/src/assets/images/logo.png"
+                        src="/logos/Logo.jpg"
                         alt="Maxhub Logo"
                         className="w-10 h-10 object-contain brightness-110 contrast-110"
                     />

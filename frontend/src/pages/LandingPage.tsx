@@ -22,7 +22,7 @@ const LandingPage: React.FC = () => {
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto text-center">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
-                    <img src="/src/assets/images/logo.png" alt="Logo" className="w-4 h-4 object-contain brightness-110" />
+                    <img src="/logos/Logo.jpg" alt="Logo" className="w-4 h-4 object-contain brightness-110" />
                     <span>Secure & Fast Data Delivery</span>
                 </div>
 
