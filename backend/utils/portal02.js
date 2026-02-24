@@ -37,7 +37,7 @@ const FALLBACK_OFFER_SLUGS = {
 const makePortal02Request = (method, path, apiKey, body = null) => {
     return new Promise((resolve, reject) => {
         // Construct full path: /api/v1 + path
-        const fullPath = '/api/v1' + path;
+        const fullPath = ('/api/v1' + path).replace(/\/+/g, '/');
 
         const options = {
             hostname: 'www.portal-02.com',
@@ -47,6 +47,7 @@ const makePortal02Request = (method, path, apiKey, body = null) => {
                 'x-api-key': apiKey,
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
             timeout: 15000, // 15 seconds timeout
         };
@@ -59,8 +60,13 @@ const makePortal02Request = (method, path, apiKey, body = null) => {
             res.on('end', () => {
                 try {
                     const jsonData = data ? JSON.parse(data) : null;
+                    if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                        console.log(`↪️ [Portal-02] Redirecting to: ${res.headers.location}`);
+                        resolve({ status: res.statusCode, ok: false, data: { redirect: res.headers.location, status: String(res.statusCode) } });
+                        return;
+                    }
                     if (res.statusCode >= 400) {
-                        console.error(`❌ Portal-02 Request Error (${res.statusCode}):`, jsonData || data);
+                        console.error(`❌ Portal-02 Request Error (${res.statusCode}):`, jsonData || data.substring(0, 200));
                     }
                     resolve({ status: res.statusCode, ok: res.statusCode >= 200 && res.statusCode < 300, data: jsonData });
                 } catch (e) {

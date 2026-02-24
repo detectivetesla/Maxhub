@@ -1,5 +1,6 @@
 const db = require('../db');
-const portal02Service = require('../services/portal02');
+const portal02Service = require('./portal02');
+const queueService = require('./queueService');
 const { logActivity } = require('./logger');
 const notificationService = require('./notificationService');
 
