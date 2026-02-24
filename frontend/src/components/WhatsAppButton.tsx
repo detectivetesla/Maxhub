@@ -1,34 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { MessageCircle } from 'lucide-react';
-import { motion, useDragControls } from 'framer-motion';
 
 const WhatsAppButton: React.FC = () => {
     const WHATSAPP_LINK = "https://chat.whatsapp.com/G1yTdqb7yVdANpIj6vS9mT";
 
     return (
-        <motion.div
-            drag
-            dragMomentum={false}
-            initial={{ x: 20, y: 0 }}
-            animate={{
-                y: [0, -10, 0],
-            }}
-            transition={{
-                y: {
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                }
-            }}
-            className="fixed bottom-8 right-8 z-[9999] cursor-grab active:cursor-grabbing"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-        >
+        <div className="fixed bottom-8 right-8 z-[9999]">
             <a
                 href={WHATSAPP_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative block"
+                className="relative block transform transition-transform hover:scale-110 active:scale-95 animate-bounce-subtle"
             >
                 {/* Glow Effect */}
                 <div className="absolute inset-0 bg-emerald-500 rounded-full blur-xl opacity-40 animate-pulse" />
@@ -43,7 +25,17 @@ const WhatsAppButton: React.FC = () => {
                     </div>
                 </div>
             </a>
-        </motion.div>
+
+            <style>{`
+                @keyframes bounce-subtle {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                .animate-bounce-subtle {
+                    animation: bounce-subtle 3s ease-into-out infinite;
+                }
+            `}</style>
+        </div>
     );
 };
 

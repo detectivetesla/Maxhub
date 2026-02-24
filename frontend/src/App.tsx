@@ -19,18 +19,7 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-const AuthWrapper: React.FC<{ type: 'signin' | 'signup' }> = ({ type }) => {
-    const [currentType, setCurrentType] = React.useState(type);
-    const { isAuthenticated, user } = useAuth();
-
-    if (isAuthenticated) {
-        const adminPath = import.meta.env.VITE_ADMIN_PATH || '/admin';
-        return <Navigate to={user?.role === 'admin' ? adminPath : '/dashboard'} replace />;
-    }
-
-    return <AuthPage type={currentType} onToggle={() => setCurrentType(currentType === 'signin' ? 'signup' : 'signin')} />;
-};
-
+// Dashboard imports
 import Overview from '@/pages/dashboard/Overview';
 import Wallet from '@/pages/dashboard/Wallet';
 import Deposits from '@/pages/dashboard/Deposits';
@@ -45,6 +34,19 @@ import AdminTransactionsPage from '@/pages/admin/AdminTransactionsPage';
 import AdminEmailPage from '@/pages/admin/AdminEmailPage';
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
 import AdminNetworksPage from '@/pages/admin/AdminNetworksPage';
+import WhatsAppButton from '@/components/WhatsAppButton';
+
+const AuthWrapper: React.FC<{ type: 'signin' | 'signup' }> = ({ type }) => {
+    const [currentType, setCurrentType] = React.useState(type);
+    const { isAuthenticated, user } = useAuth();
+
+    if (isAuthenticated) {
+        const adminPath = import.meta.env.VITE_ADMIN_PATH || '/admin';
+        return <Navigate to={user?.role === 'admin' ? adminPath : '/dashboard'} replace />;
+    }
+
+    return <AuthPage type={currentType} onToggle={() => setCurrentType(currentType === 'signin' ? 'signup' : 'signin')} />;
+};
 
 // Get admin path from env or default to /admin
 const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH || '/admin';
@@ -98,8 +100,6 @@ const AppRoutes: React.FC = () => {
         </Routes>
     );
 };
-
-import WhatsAppButton from '@/components/WhatsAppButton';
 
 const App: React.FC = () => {
     return (
