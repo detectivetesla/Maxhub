@@ -46,7 +46,8 @@ const DataBundles: React.FC = () => {
     useEffect(() => {
         const fetchBundles = async () => {
             try {
-                const response = await api.get('/admin/bundles');
+                const response = await api.get('/dashboard/bundles');
+
                 // Map API price_ghc to price field
                 const formattedBundles = response.data.bundles.map((b: any) => ({
                     ...b,

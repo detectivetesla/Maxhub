@@ -49,7 +49,18 @@ const dashboardController = {
         } catch (error) {
             res.status(500).json({ message: 'Failed to fetch stats', error: error.message });
         }
+    },
+
+    getBundles: async (req, res) => {
+        try {
+            const result = await db.query('SELECT * FROM bundles WHERE is_active = true ORDER BY network, price_ghc');
+            res.json({ bundles: result.rows });
+        } catch (error) {
+            console.error('Get User Bundles Error:', error);
+            res.status(500).json({ message: 'Failed to fetch data bundles' });
+        }
     }
 };
+
 
 module.exports = dashboardController;
