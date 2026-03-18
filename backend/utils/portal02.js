@@ -49,7 +49,7 @@ const makePortal02Request = (method, path, apiKey, body = null) => {
                 'Content-Type': 'application/json',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
-            timeout: 15000, // 15 seconds timeout
+            timeout: 60000, // 60 seconds timeout
         };
 
         console.log(`📡 [Portal-02] Sending ${method} to ${fullPath}...`);
@@ -82,7 +82,7 @@ const makePortal02Request = (method, path, apiKey, body = null) => {
             resolve({
                 status: 408,
                 ok: false,
-                data: { error: 'Request timed out after 15 seconds' }
+                data: { error: 'Request timed out after 60 seconds' }
             });
         });
 

@@ -11,6 +11,7 @@ const adminController = {
                 totalUsersResult,
                 todayOrdersResult,
                 todayRevenueResult,
+                thisMonthRevenueResult,
                 lifetimeRevenueResult,
                 pendingOrdersResult,
                 dailyRevenueResult,
@@ -23,6 +24,7 @@ const adminController = {
                 db.query('SELECT COUNT(*) FROM users'),
                 db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status != 'initialized' AND created_at >= CURRENT_DATE"),
                 db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success' AND created_at >= CURRENT_DATE"),
+                db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success' AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)"),
                 db.query("SELECT SUM(amount) FROM transactions WHERE purpose = 'data_purchase' AND status = 'success'"),
                 db.query("SELECT COUNT(*) FROM transactions WHERE purpose = 'data_purchase' AND status = 'processing'"),
                 db.query(`
@@ -84,6 +86,7 @@ const adminController = {
                 totalUsers: Number(totalUsersResult.rows[0].count),
                 todayOrders: Number(todayOrdersResult.rows[0].count),
                 todayRevenue: Number(todayRevenueResult.rows[0].sum || 0),
+                thisMonthRevenue: Number(thisMonthRevenueResult.rows[0].sum || 0),
                 lifetimeRevenue: Number(lifetimeRevenueResult.rows[0].sum || 0),
                 pendingOrders: Number(pendingOrdersResult.rows[0].count),
                 dailyRevenue: dailyRevenueResult.rows.map(row => ({

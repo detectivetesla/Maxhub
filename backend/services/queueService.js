@@ -43,14 +43,32 @@ const processOrderQueue = async () => {
             try {
                 console.log(`📦 [Queue Service] Attempting order ${order.reference} (Retry: ${order.retries})...`);
 
-                // 2. Call Portal-02 Service
-                const portalResponse = await portal02Service.purchaseData(
-                    order.network,
-                    order.data_amount,
-                    order.recipient_phone,
-                    order.provider_code,
-                    order.reference
-                );
+                let portalResponse;
+
+                // If it's a retry, let's first check if the order already exists on Portal-02
+                if (order.retries > 0) {
+                    try {
+                        const statusCheck = await portal02Service.checkOrderStatus(order.reference);
+                        if (statusCheck && typeof statusCheck === 'object') {
+                            console.log(`🔍 [Queue Service] Order ${order.reference} exists on Portal-02. Proceeding with existing status.`);
+                            portalResponse = statusCheck;
+                        }
+                    } catch (e) {
+                         // Ignore error, might mean order completely doesn't exist yet
+                         console.log(`🔍 [Queue Service] Order ${order.reference} not found on Portal-02, will place new order.`);
+                    }
+                }
+
+                if (!portalResponse) {
+                    // 2. Call Portal-02 Service
+                    portalResponse = await portal02Service.purchaseData(
+                        order.network,
+                        order.data_amount,
+                        order.recipient_phone,
+                        order.provider_code,
+                        order.reference
+                    );
+                }
 
                 // 3. Update status based on response
                 // If it reaches here, it means the service didn't throw an error

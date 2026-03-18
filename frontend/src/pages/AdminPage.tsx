@@ -22,6 +22,7 @@ const AdminPage: React.FC = () => {
         totalUsers: 0,
         todayOrders: 0,
         todayRevenue: 0,
+        thisMonthRevenue: 0,
         lifetimeRevenue: 0,
         pendingOrders: 0,
         dailyRevenue: [],
@@ -85,6 +86,7 @@ const AdminPage: React.FC = () => {
         { label: 'TOTAL USERS', value: statsData.totalUsers.toString(), icon: Users, color: 'text-purple-600', bg: 'bg-purple-600', border: 'border-purple-400/50', path: `${ADMIN_PATH}/users` },
         { label: "TODAY'S ORDERS", value: statsData.todayOrders.toString(), icon: Database, color: 'text-orange-600', bg: 'bg-orange-500', border: 'border-orange-400/50', path: `${ADMIN_PATH}/orders` },
         { label: "TODAY'S REVENUE", value: `GH₵ ${statsData.todayRevenue.toLocaleString()}`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-500', border: 'border-amber-300/50', path: `${ADMIN_PATH}/analytics` },
+        { label: "THIS MONTH'S REVENUE", value: `GH₵ ${(statsData.thisMonthRevenue || 0).toLocaleString()}`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-500', border: 'border-emerald-300/50', path: `${ADMIN_PATH}/analytics` },
         { label: 'PENDING ORDERS', value: statsData.pendingOrders.toString(), icon: Activity, color: 'text-blue-600', bg: 'bg-blue-600', border: 'border-blue-400/50', isPrimary: true, path: `${ADMIN_PATH}/orders` },
     ];
 
@@ -139,7 +141,7 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {stats.map((stat) => (
                     <Link
                         key={stat.label}
