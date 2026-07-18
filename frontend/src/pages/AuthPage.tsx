@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, Check, Globe, LayoutGrid, Phone } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Check, Globe, Phone, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import Button from '@/components/Button';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/utils/supabase';
 import api from '@/utils/api';
 
 interface AuthPageProps {
@@ -19,8 +20,6 @@ const GoogleIcon = () => (
         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
     </svg>
 );
-
-
 
 const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
     const { login, register } = useAuth();
@@ -41,14 +40,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
     const [countryCode, setCountryCode] = useState('+233');
     const [registrationEnabled, setRegistrationEnabled] = useState(true);
 
+    // Initial system config check
     React.useEffect(() => {
         const checkSettings = async () => {
             try {
                 const response = await api.get('/auth/config');
-                // Check if public registration is disabled
                 if (response.data.public_registration === false) {
                     setRegistrationEnabled(false);
-                    // If currently on signup and it's disabled, switch to signin
                     if (type === 'signup') {
                         onToggle();
                     }
@@ -57,9 +55,66 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
                 console.error('Failed to check system config', error);
             }
         };
-
         checkSettings();
     }, []);
+
+    // Listen to Supabase Auth State changes for Google login redirect handling
+    React.useEffect(() => {
+        if (!supabase) return;
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+                setLoading(true);
+                setErrorMsg('');
+                setSuccessMsg('');
+                try {
+                    const response = await api.post('/auth/google-login', {
+                        accessToken: session.access_token
+                    });
+                    
+                    // Log in via custom backend session token
+                    login(response.data);
+                    
+                    // Immediately log out from Supabase frontend to prevent session persistence/loops
+                    await supabase?.auth.signOut();
+                    
+                    navigate('/dashboard');
+                } catch (err: any) {
+                    console.error('Backend Google Auth validation failed:', err);
+                    setErrorMsg(err.response?.data?.message || 'Google Authentication failed. Please try again.');
+                    await supabase?.auth.signOut();
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [navigate, login]);
+
+    const handleGoogleLogin = async () => {
+        if (!supabase) {
+            setErrorMsg('Google login is not configured on the platform. Please contact administration.');
+            return;
+        }
+        setLoading(true);
+        setErrorMsg('');
+        setSuccessMsg('');
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/login`
+                }
+            });
+            if (error) throw error;
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Failed to initialize Google authentication.');
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -75,7 +130,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
                     fullName: `${formData.firstName} ${formData.lastName}`,
                     phoneNumber: `${countryCode}${formData.phoneNumber}`
                 });
-                setSuccessMsg('Account created! Please login to continue.');
+                setSuccessMsg('Account created successfully! Please login to continue.');
                 setFormData(prev => ({ ...prev, password: '' }));
                 setTimeout(() => onToggle(), 2000);
             } else {
@@ -94,210 +149,271 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-3 sm:p-6 font-sans relative overflow-hidden">
-            {/* Background Image */}
-            <div className="absolute inset-0 z-0">
+        <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 font-sans relative overflow-hidden bg-[#0B0F19]">
+            {/* Background Image with blur & premium overlay */}
+            <div className="absolute inset-0 z-0 select-none pointer-events-none">
                 <img
                     src="/images/auth-bg.jpg"
                     alt="Background"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover opacity-30 sm:opacity-40 scale-105 filter blur-[3px]"
                 />
-                <div className="absolute inset-0 bg-[#0B0F19]/70 backdrop-blur-[2px]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F19]/90 via-[#0B0F19]/80 to-[#0B0F19]" />
             </div>
 
             {/* Top Header */}
-            <header className="relative w-full max-w-[1400px] flex items-center justify-between z-20 mb-4 sm:mb-8 md:mb-12">
-                <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate('/')}>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-transparent flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <img src="/logos/Logo.jpg" alt="Logo" className="w-full h-full object-contain brightness-110" />
+            <header className="relative w-full max-w-[1400px] flex items-center justify-between z-20 mb-6 sm:mb-10 md:mb-14">
+                <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => navigate('/')}>
+                    <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-105 group-hover:border-primary/30 transition-all duration-300">
+                        <img src="/logos/Logo.jpg" alt="Logo" className="w-7 h-7 object-contain rounded-lg" />
                     </div>
-                    <span className="text-base sm:text-xl font-black text-white tracking-tighter">MaxHub</span>
+                    <span className="text-lg sm:text-2xl font-black text-white tracking-tight">MaxHub</span>
                 </div>
 
-                <button className="hidden xs:flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs sm:text-sm font-bold text-slate-300">
-                    <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
+                <button className="hidden xs:flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-xs sm:text-sm font-bold text-slate-300 shadow-lg">
+                    <Globe className="w-4 h-4 text-primary" />
                     <span className="hidden sm:inline">English (UK)</span>
                     <span className="sm:hidden">EN</span>
                 </button>
             </header>
 
-            <div className="relative w-full max-w-[520px] z-10 flex flex-col items-center">
+            <div className="relative w-full max-w-[540px] z-10 flex flex-col items-center px-2">
                 {/* Auth Context Header */}
-                <div className="text-center mb-6 sm:mb-10 md:mb-14 space-y-2 sm:space-y-4 animate-in fade-in slide-in-from-top-4 duration-500 px-4">
-                    <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight">
-                        {type === 'signin' ? 'Sign In' : 'Sign Up'}
+                <div className="text-center mb-6 sm:mb-8 space-y-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                        {type === 'signin' ? 'Welcome Back' : 'Get Started'}
                     </h2>
-                    <p className="text-slate-400 text-sm sm:text-lg md:text-xl font-medium">
+                    <p className="text-slate-400 text-sm sm:text-base font-semibold max-w-[340px] mx-auto">
                         {type === 'signin'
-                            ? "Welcome back, you've been missed!"
-                            : "Join us and start your journey today!"}
+                            ? "Access Ghanaian's premier high-speed data marketplace"
+                            : "Create an account to purchase affordable data bundles in seconds"}
                     </p>
                 </div>
 
                 {/* Auth Card */}
-                <div className="w-full bg-[#1F2937]/90 backdrop-blur-3xl rounded-3xl sm:rounded-[2rem] p-6 sm:p-10 md:p-12 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] border border-white/5 relative overflow-hidden animate-in fade-in zoom-in-95 duration-700">
+                <div className="w-full bg-[#161B26]/85 backdrop-blur-2xl rounded-3xl p-6 sm:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] border border-white/[0.08] relative overflow-hidden transition-all duration-300">
+                    <div className="flex items-center justify-center gap-2 mb-8">
+                        <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center">
+                            <img src="/logos/Logo.jpg" alt="Logo" className="w-6 h-6 object-contain rounded-md" />
+                        </div>
+                        <span className="text-lg font-black text-white tracking-tight">MaxHub Account</span>
+                    </div>
 
+                    {/* Inline Usability alerts (HCI) - Non-overlapping list that pushes form contents */}
                     {successMsg && (
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] bg-blue-500/10 border border-blue-500/20 py-2 sm:py-3 rounded-xl text-center text-xs font-bold text-blue-400 px-4 animate-in slide-in-from-top-2">
-                            {successMsg}
+                        <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-start justify-between gap-3 text-emerald-400 animate-in slide-in-from-top-2 duration-300">
+                            <div className="flex gap-3 items-start">
+                                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                                <div className="space-y-0.5">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider">Success</h4>
+                                    <p className="text-xs font-medium opacity-90 leading-relaxed">{successMsg}</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setSuccessMsg('')}
+                                className="text-emerald-400 hover:text-emerald-300 transition-colors p-0.5 hover:bg-emerald-500/10 rounded-lg shrink-0"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
                     )}
 
                     {errorMsg && (
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90%] bg-red-500/10 border border-red-500/20 py-2 sm:py-3 rounded-xl text-center text-xs font-bold text-red-400 px-4 animate-in slide-in-from-top-2">
-                            {errorMsg}
+                        <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-start justify-between gap-3 text-rose-400 animate-in slide-in-from-top-2 duration-300">
+                            <div className="flex gap-3 items-start">
+                                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                                <div className="space-y-0.5">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider">Action Required</h4>
+                                    <p className="text-xs font-medium opacity-90 leading-relaxed">{errorMsg}</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setErrorMsg('')}
+                                className="text-rose-400 hover:text-rose-300 transition-colors p-0.5 hover:bg-rose-500/10 rounded-lg shrink-0"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
                     )}
 
-                    <div className="flex items-center justify-center gap-2 mb-8">
-                        <div className="w-8 h-8 rounded-lg bg-transparent flex items-center justify-center">
-                            <img src="/logos/Logo.jpg" alt="Logo" className="w-full h-full object-contain brightness-110" />
-                        </div>
-                        <span className="text-xl font-black text-white tracking-tighter">MaxHub</span>
-                    </div>
-
                     {/* Social Auth Buttons */}
-                    <div className="mb-8">
-                        <button className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/5 transition-all text-sm font-bold text-white shadow-xl group">
+                    <div className="mb-6">
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            disabled={loading}
+                            className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-white/5 hover:bg-white/10 active:scale-[0.99] border border-white/10 hover:border-white/20 transition-all text-sm font-bold text-white shadow-xl group disabled:opacity-50 disabled:pointer-events-none"
+                        >
                             <GoogleIcon />
                             <span>Continue with Google</span>
                         </button>
                     </div>
 
                     {/* Divider */}
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="flex-1 h-[1px] bg-white/10" />
-                        <span className="text-xs uppercase font-bold tracking-widest text-slate-400">OR</span>
-                        <div className="flex-1 h-[1px] bg-white/10" />
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="flex-1 h-[1px] bg-white/[0.08]" />
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">OR</span>
+                        <div className="flex-1 h-[1px] bg-white/[0.08]" />
                     </div>
 
-                    <form className="space-y-4 sm:space-y-5 md:space-y-6" onSubmit={handleSubmit}>
+                    <form className="space-y-5" onSubmit={handleSubmit}>
                         {type === 'signup' && (
                             <>
-                                {/* Name Fields */}
+                                {/* Name Fields (inline, responsive wrap) */}
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <div className="relative group flex-1">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
-                                        <input
-                                            required
-                                            type="text"
-                                            value={formData.firstName}
-                                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                            placeholder="First Name"
-                                            className="w-full bg-[#0B0F19]/40 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white text-sm font-medium placeholder:text-slate-500 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                                        />
+                                    <div className="space-y-1.5 flex-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">First Name</label>
+                                        <div className="relative group">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.firstName}
+                                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                placeholder="John"
+                                                className="w-full bg-[#0B0F19]/50 border border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm font-medium placeholder:text-slate-600 outline-none transition-all duration-200"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="relative group flex-1">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
-                                        <input
-                                            required
-                                            type="text"
-                                            value={formData.lastName}
-                                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                            placeholder="Last Name"
-                                            className="w-full bg-[#0B0F19]/40 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white text-sm font-medium placeholder:text-slate-500 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                                        />
+                                    <div className="space-y-1.5 flex-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Last Name</label>
+                                        <div className="relative group">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.lastName}
+                                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                placeholder="Doe"
+                                                className="w-full bg-[#0B0F19]/50 border border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm font-medium placeholder:text-slate-600 outline-none transition-all duration-200"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Phone Number Field */}
                                 <div className="space-y-1.5">
-                                    <label className="text-xs text-slate-500 font-bold ml-1">Phone Number</label>
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <div className="relative flex-shrink-0 w-full sm:w-auto">
-                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Phone Number</label>
+                                    <div className="flex gap-3">
+                                        <div className="relative shrink-0 w-[110px]">
                                             <select
                                                 value={countryCode}
                                                 onChange={(e) => setCountryCode(e.target.value)}
-                                                className="w-full sm:w-auto h-full bg-[#0B0F19]/40 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white text-sm font-medium outline-none cursor-pointer focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all appearance-none"
+                                                className="w-full h-full bg-[#0B0F19]/50 border border-white/10 rounded-2xl py-3.5 px-3.5 text-white text-sm font-semibold outline-none cursor-pointer focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all appearance-none text-center"
                                             >
-                                                <option value="+233" className="bg-[#1c1f26] text-white">🇬🇭 +233</option>
-                                                <option value="+234" className="bg-[#1c1f26] text-white">🇳🇬 +234</option>
-                                                <option value="+254" className="bg-[#1c1f26] text-white">🇰🇪 +254</option>
-                                                <option value="+44" className="bg-[#1c1f26] text-white">🇬🇧 +44</option>
-                                                <option value="+1" className="bg-[#1c1f26] text-white">🇺🇸 +1</option>
+                                                <option value="+233" className="bg-[#161B26] text-white">🇬🇭 +233</option>
+                                                <option value="+234" className="bg-[#161B26] text-white">🇳🇬 +234</option>
+                                                <option value="+254" className="bg-[#161B26] text-white">🇰🇪 +254</option>
+                                                <option value="+44" className="bg-[#161B26] text-white">🇬🇧 +44</option>
+                                                <option value="+1" className="bg-[#161B26] text-white">🇺🇸 +1</option>
                                             </select>
+                                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
                                         </div>
-                                        <input
-                                            required
-                                            type="tel"
-                                            value={formData.phoneNumber}
-                                            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                                            placeholder="24 123 4567"
-                                            className="flex-1 bg-[#0B0F19]/40 border border-white/10 rounded-xl py-3.5 px-4 text-white text-sm font-medium placeholder:text-slate-500 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                                        />
+                                        <div className="relative flex-1 group">
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                            <input
+                                                required
+                                                type="tel"
+                                                value={formData.phoneNumber}
+                                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                                placeholder="24 123 4567"
+                                                className="w-full bg-[#0B0F19]/50 border border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm font-medium placeholder:text-slate-600 outline-none transition-all duration-200"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </>
                         )}
 
                         {/* Email Field */}
-                        <div className="relative group">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
-                            <input
-                                required
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                placeholder="Email Address"
-                                className="w-full bg-[#0B0F19]/40 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white text-sm font-medium placeholder:text-slate-500 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                            />
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                <input
+                                    required
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    placeholder="yourname@domain.com"
+                                    className="w-full bg-[#0B0F19]/50 border border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm font-medium placeholder:text-slate-600 outline-none transition-all duration-200"
+                                />
+                            </div>
                         </div>
 
                         {/* Password Field */}
-                        <div className="relative group">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
-                            <input
-                                required
-                                type={showPassword ? 'text' : 'password'}
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                placeholder="Password"
-                                className="w-full bg-[#0B0F19]/40 border border-white/10 rounded-xl py-3.5 pl-11 pr-11 text-white text-sm font-medium placeholder:text-slate-500 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors p-1"
-                            >
-                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Password</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                <input
+                                    required
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    placeholder="••••••••••••"
+                                    className="w-full bg-[#0B0F19]/50 border border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl py-3.5 pl-11 pr-11 text-white text-sm font-medium placeholder:text-slate-600 outline-none transition-all duration-200"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors p-1"
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Remember Me & Forgot Password */}
                         {type === 'signin' && (
-                            <div className="flex items-center justify-between px-1">
-                                <label className="flex items-center gap-2 cursor-pointer group">
+                            <div className="flex items-center justify-between px-1 text-xs">
+                                <label className="flex items-center gap-2.5 cursor-pointer group select-none">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={rememberMe} 
+                                        onChange={() => setRememberMe(!rememberMe)} 
+                                        className="sr-only"
+                                    />
                                     <div className={cn(
-                                        "w-4 h-4 rounded border border-white/10 flex items-center justify-center transition-all",
-                                        rememberMe ? "bg-primary border-primary" : "bg-white/5"
-                                    )} onClick={() => setRememberMe(!rememberMe)}>
+                                        "w-4 h-4 rounded-md border flex items-center justify-center transition-all duration-200",
+                                        rememberMe 
+                                            ? "bg-primary border-primary text-white" 
+                                            : "bg-[#0B0F19]/50 border-white/15 group-hover:border-white/30"
+                                    )}>
                                         {rememberMe && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                                     </div>
-                                    <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300 transition-colors">Remember me</span>
+                                    <span className="font-semibold text-slate-400 group-hover:text-slate-300 transition-colors">Remember me</span>
                                 </label>
-                                <button type="button" className="text-xs font-medium text-slate-400 hover:text-primary transition-colors">
+                                <button type="button" className="font-bold text-slate-400 hover:text-primary transition-colors">
                                     Forgot Password?
                                 </button>
                             </div>
                         )}
 
                         {type === 'signup' && (
-                            <div className="px-1">
-                                <div
-                                    className="flex items-start gap-2 cursor-pointer group"
-                                    onClick={() => setFormData({ ...formData, agreedToTerms: !formData.agreedToTerms })}
-                                >
+                            <div className="px-1 text-xs">
+                                <label className="flex items-start gap-2.5 cursor-pointer group select-none">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={formData.agreedToTerms} 
+                                        onChange={() => setFormData({ ...formData, agreedToTerms: !formData.agreedToTerms })} 
+                                        className="sr-only"
+                                    />
                                     <div className={cn(
-                                        "w-4 h-4 rounded border border-white/10 flex items-center justify-center transition-all mt-0.5 shrink-0",
-                                        formData.agreedToTerms ? "bg-primary border-primary" : "bg-white/5"
+                                        "w-4 h-4 rounded-md border flex items-center justify-center transition-all duration-200 mt-0.5 shrink-0",
+                                        formData.agreedToTerms 
+                                            ? "bg-primary border-primary text-white" 
+                                            : "bg-[#0B0F19]/50 border-white/15 group-hover:border-white/30"
                                     )}>
                                         {formData.agreedToTerms && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                                     </div>
-                                    <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
-                                        I agree to the <button type="button" className="text-primary hover:underline" onClick={(e) => { e.stopPropagation(); navigate('/terms'); }}>Terms of Service</button> and <button type="button" className="text-primary hover:underline" onClick={(e) => { e.stopPropagation(); navigate('/privacy'); }}>Privacy Policy</button>
+                                    <span className="font-semibold text-slate-400 leading-normal group-hover:text-slate-300 transition-colors">
+                                        I agree to the <button type="button" className="text-primary font-bold hover:underline" onClick={(e) => { e.stopPropagation(); navigate('/terms'); }}>Terms of Service</button> and <button type="button" className="text-primary font-bold hover:underline" onClick={(e) => { e.stopPropagation(); navigate('/privacy'); }}>Privacy Policy</button>
                                     </span>
-                                </div>
+                                </label>
                             </div>
                         )}
 
@@ -306,20 +422,20 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
                             type="submit"
                             isLoading={loading}
                             disabled={type === 'signup' && !formData.agreedToTerms}
-                            className="w-full py-3.5 text-sm font-bold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg transition-all active:scale-[0.98] mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-4 text-xs font-black rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all active:scale-[0.98] mt-4 uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {type === 'signin' ? 'Sign In' : 'Sign Up'}
+                            {type === 'signin' ? 'Sign In Account' : 'Register Account'}
                         </Button>
                     </form>
 
                     {/* Toggle Link */}
                     <div className="text-center mt-6">
-                        <p className="text-slate-400 text-xs font-medium">
-                            {type === 'signin' ? "You haven't any account?" : "Already have an account?"}{' '}
+                        <p className="text-slate-400 text-xs font-semibold">
+                            {type === 'signin' ? "Don't have an account yet?" : "Already have an account?"}{' '}
                             <button
                                 onClick={onToggle}
                                 className={cn(
-                                    "text-primary font-bold hover:underline transition-all",
+                                    "text-primary font-black hover:underline transition-all ml-1",
                                     !registrationEnabled && type === 'signin' && "hidden"
                                 )}
                                 disabled={!registrationEnabled && type === 'signin'}
