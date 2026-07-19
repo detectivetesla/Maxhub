@@ -132,7 +132,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
         setSuccessMsg('');
         try {
             // Direct Google OAuth 2.0 flow
-            const clientId = '981565476180-t34i5j4fbklm84ehptj293t29eb2bci2.apps.googleusercontent.com';
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '981565476180-t34i5j4fbklm84ehptj293t29eb2bci2.apps.googleusercontent.com';
             const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
             const scope = encodeURIComponent('openid email profile');
             const state = type; // Keep track of signin / signup state
