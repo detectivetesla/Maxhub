@@ -58,7 +58,42 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
         checkSettings();
     }, []);
 
-    // Listen to Supabase Auth State changes for Google login redirect handling
+    // Listen to Google Redirect Hash (direct Google OAuth)
+    React.useEffect(() => {
+        const handleHashAuth = async () => {
+            const hash = window.location.hash;
+            if (hash) {
+                const params = new URLSearchParams(hash.substring(1)); // remove '#'
+                const accessToken = params.get('access_token');
+                if (accessToken) {
+                    // Clear the hash from the address bar so the token isn't visible
+                    window.history.replaceState(null, '', window.location.pathname);
+                    
+                    setLoading(true);
+                    setErrorMsg('');
+                    setSuccessMsg('');
+                    try {
+                        const response = await api.post('/auth/google-login', {
+                            accessToken,
+                            provider: 'google'
+                        });
+                        
+                        // Log in via custom backend session token
+                        login(response.data);
+                        navigate('/dashboard');
+                    } catch (err: any) {
+                        console.error('Backend Google Auth validation failed:', err);
+                        setErrorMsg(err.response?.data?.message || 'Google Authentication failed. Please try again.');
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+            }
+        };
+        handleHashAuth();
+    }, [navigate, login]);
+
+    // Keep Supabase listener as fallback
     React.useEffect(() => {
         if (!supabase) return;
 
@@ -69,18 +104,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
                 setSuccessMsg('');
                 try {
                     const response = await api.post('/auth/google-login', {
-                        accessToken: session.access_token
+                        accessToken: session.access_token,
+                        provider: 'supabase'
                     });
                     
-                    // Log in via custom backend session token
                     login(response.data);
-                    
-                    // Immediately log out from Supabase frontend to prevent session persistence/loops
                     await supabase?.auth.signOut();
-                    
                     navigate('/dashboard');
                 } catch (err: any) {
-                    console.error('Backend Google Auth validation failed:', err);
+                    console.error('Backend Supabase Auth validation failed:', err);
                     setErrorMsg(err.response?.data?.message || 'Google Authentication failed. Please try again.');
                     await supabase?.auth.signOut();
                 } finally {
@@ -95,21 +127,19 @@ const AuthPage: React.FC<AuthPageProps> = ({ type, onToggle }) => {
     }, [navigate, login]);
 
     const handleGoogleLogin = async () => {
-        if (!supabase) {
-            setErrorMsg('Google login is not configured on the platform. Please contact administration.');
-            return;
-        }
         setLoading(true);
         setErrorMsg('');
         setSuccessMsg('');
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/login`
-                }
-            });
-            if (error) throw error;
+            // Direct Google OAuth 2.0 flow
+            const clientId = '981565476180-t34i5j4fbklm84ehptj293t29eb2bci2.apps.googleusercontent.com';
+            const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
+            const scope = encodeURIComponent('openid email profile');
+            const state = type; // Keep track of signin / signup state
+            const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&state=${state}`;
+            
+            // Redirect the user to Google OAuth login screen directly
+            window.location.href = googleAuthUrl;
         } catch (err: any) {
             setErrorMsg(err.message || 'Failed to initialize Google authentication.');
             setLoading(false);

@@ -151,54 +151,83 @@ const authController = {
     // Google OAuth login/signup controller
     googleLogin: async (req, res) => {
         try {
-            const { accessToken } = req.body;
+            const { accessToken, provider } = req.body;
 
             if (!accessToken) {
                 return res.status(400).json({ message: 'Access token is required' });
             }
 
-            // Verify access token with Supabase Auth API
-            const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://jcqihbdwzgwzmgqpqlcc.supabase.co';
-            const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+            let email, fullName, avatarUrl;
 
-            if (!supabaseAnonKey) {
-                console.error('CRITICAL: Supabase Anon Key (SUPABASE_ANON_KEY or VITE_SUPABASE_ANON_KEY) is missing in backend environment variables!');
-                return res.status(500).json({ 
-                    message: 'Supabase configuration missing in backend environment variables. Please check your Vercel or production hosting environment settings.',
-                    debugInfo: {
-                        hasUrl: !!supabaseUrl,
-                        hasAnonKey: false
-                    }
-                });
+            if (provider === 'google') {
+                // Verify directly with Google OAuth API
+                let googleResponse;
+                try {
+                    googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+                } catch (apiError) {
+                    console.error('Google API validation failed:', apiError.response?.data || apiError.message);
+                    return res.status(401).json({ 
+                        message: 'Failed to verify Google access token directly.',
+                        error: apiError.message,
+                        details: apiError.response?.data
+                    });
+                }
+
+                const googleUser = googleResponse.data;
+                if (!googleUser || !googleUser.email) {
+                    return res.status(401).json({ message: 'Invalid or expired Google session' });
+                }
+
+                email = googleUser.email;
+                fullName = googleUser.name || googleUser.given_name || email.split('@')[0];
+                avatarUrl = googleUser.picture || '';
+            } else {
+                // Verify access token with Supabase Auth API (fallback/legacy)
+                const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://jcqihbdwzgwzmgqpqlcc.supabase.co';
+                const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+                if (!supabaseAnonKey) {
+                    console.error('CRITICAL: Supabase Anon Key (SUPABASE_ANON_KEY or VITE_SUPABASE_ANON_KEY) is missing in backend environment variables!');
+                    return res.status(500).json({ 
+                        message: 'Supabase configuration missing in backend environment variables. Please check your Vercel or production hosting environment settings.',
+                        debugInfo: {
+                            hasUrl: !!supabaseUrl,
+                            hasAnonKey: false
+                        }
+                    });
+                }
+
+                // Fetch the user information from Supabase auth endpoint
+                let response;
+                try {
+                    response = await axios.get(`${supabaseUrl}/auth/v1/user`, {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'apikey': supabaseAnonKey
+                        }
+                    });
+                } catch (apiError) {
+                    console.error('Supabase API validation failed:', apiError.response?.data || apiError.message);
+                    return res.status(401).json({ 
+                        message: 'Failed to verify Google session with Supabase.',
+                        error: apiError.message,
+                        details: apiError.response?.data
+                    });
+                }
+
+                const supabaseUser = response.data;
+                if (!supabaseUser || !supabaseUser.email) {
+                    return res.status(401).json({ message: 'Invalid or expired Google session' });
+                }
+
+                email = supabaseUser.email;
+                fullName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || email.split('@')[0];
+                avatarUrl = supabaseUser.user_metadata?.avatar_url || '';
             }
-
-            // Fetch the user information from Supabase auth endpoint
-            let response;
-            try {
-                response = await axios.get(`${supabaseUrl}/auth/v1/user`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'apikey': supabaseAnonKey
-                    }
-                });
-            } catch (apiError) {
-                console.error('Supabase API validation failed:', apiError.response?.data || apiError.message);
-                return res.status(401).json({ 
-                    message: 'Failed to verify Google session with Supabase.',
-                    error: apiError.message,
-                    details: apiError.response?.data
-                });
-            }
-
-            const supabaseUser = response.data;
-            if (!supabaseUser || !supabaseUser.email) {
-                return res.status(401).json({ message: 'Invalid or expired Google session' });
-            }
-
-            const email = supabaseUser.email;
-            // Get full name from user metadata
-            const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || email.split('@')[0];
-            const avatarUrl = supabaseUser.user_metadata?.avatar_url || '';
 
             // Check if user exists in public.users table
             let userResult;
