@@ -162,16 +162,33 @@ const authController = {
             const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
             if (!supabaseAnonKey) {
-                console.error('Supabase Anon Key is missing in backend env');
+                console.error('CRITICAL: Supabase Anon Key (SUPABASE_ANON_KEY or VITE_SUPABASE_ANON_KEY) is missing in backend environment variables!');
+                return res.status(500).json({ 
+                    message: 'Supabase configuration missing in backend environment variables. Please check your Vercel or production hosting environment settings.',
+                    debugInfo: {
+                        hasUrl: !!supabaseUrl,
+                        hasAnonKey: false
+                    }
+                });
             }
 
             // Fetch the user information from Supabase auth endpoint
-            const response = await axios.get(`${supabaseUrl}/auth/v1/user`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'apikey': supabaseAnonKey
-                }
-            });
+            let response;
+            try {
+                response = await axios.get(`${supabaseUrl}/auth/v1/user`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'apikey': supabaseAnonKey
+                    }
+                });
+            } catch (apiError) {
+                console.error('Supabase API validation failed:', apiError.response?.data || apiError.message);
+                return res.status(401).json({ 
+                    message: 'Failed to verify Google session with Supabase.',
+                    error: apiError.message,
+                    details: apiError.response?.data
+                });
+            }
 
             const supabaseUser = response.data;
             if (!supabaseUser || !supabaseUser.email) {
@@ -184,12 +201,32 @@ const authController = {
             const avatarUrl = supabaseUser.user_metadata?.avatar_url || '';
 
             // Check if user exists in public.users table
-            let userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+            let userResult;
+            try {
+                userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+            } catch (dbError) {
+                console.error('Database query for user failed:', dbError);
+                return res.status(500).json({ 
+                    message: 'Database error checking user existence', 
+                    error: dbError.message 
+                });
+            }
+            
             let user = userResult.rows[0];
 
             if (!user) {
                 // Check if public registration is enabled
-                const settingsResult = await db.query("SELECT value FROM settings WHERE key = 'public_registration'");
+                let settingsResult;
+                try {
+                    settingsResult = await db.query("SELECT value FROM settings WHERE key = 'public_registration'");
+                } catch (dbError) {
+                    console.error('Database query for registration settings failed:', dbError);
+                    return res.status(500).json({ 
+                        message: 'Database error reading platform settings', 
+                        error: dbError.message 
+                    });
+                }
+                
                 if (settingsResult.rows.length > 0 && settingsResult.rows[0].value === 'false') {
                     return res.status(403).json({ message: 'Public registration is currently disabled.' });
                 }
@@ -198,40 +235,58 @@ const authController = {
                 const placeholderPassword = 'google_auth_placeholder_' + Math.random().toString(36).substring(2);
                 const hashedPassword = await bcrypt.hash(placeholderPassword, 10);
                 
-                const insertResult = await db.query(
-                    'INSERT INTO users (email, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id, email, full_name, role, wallet_balance, phone_number',
-                    [email, hashedPassword, fullName]
-                );
+                let insertResult;
+                try {
+                    insertResult = await db.query(
+                        'INSERT INTO users (email, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id, email, full_name, role, wallet_balance, phone_number',
+                        [email, hashedPassword, fullName]
+                    );
+                } catch (dbError) {
+                    console.error('Database user insertion failed:', dbError);
+                    return res.status(500).json({ 
+                        message: 'Database error registering new user profile', 
+                        error: dbError.message 
+                    });
+                }
                 user = insertResult.rows[0];
 
                 // Create profile with avatar
-                await db.query(
-                    'INSERT INTO profiles (id, avatar_url, is_verified, last_login) VALUES ($1, $2, $3, NOW()) ON CONFLICT (id) DO UPDATE SET last_login = NOW(), avatar_url = COALESCE(profiles.avatar_url, EXCLUDED.avatar_url)',
-                    [user.id, avatarUrl, true]
-                );
+                try {
+                    await db.query(
+                        'INSERT INTO profiles (id, avatar_url, is_verified, last_login) VALUES ($1, $2, $3, NOW()) ON CONFLICT (id) DO UPDATE SET last_login = NOW(), avatar_url = COALESCE(profiles.avatar_url, EXCLUDED.avatar_url)',
+                        [user.id, avatarUrl, true]
+                    );
+                } catch (dbError) {
+                    console.error('Database profile insertion failed:', dbError);
+                    // Non-fatal warning - proceed even if avatar fails
+                }
 
-                logActivity({
-                    userId: user.id,
-                    type: 'auth',
-                    level: 'success',
-                    action: 'User Google Registration',
-                    message: `New user registered via Google: ${email}`,
-                    req
-                });
+                try {
+                    logActivity({
+                        userId: user.id,
+                        type: 'auth',
+                        level: 'success',
+                        action: 'User Google Registration',
+                        message: `New user registered via Google: ${email}`,
+                        req
+                    });
 
-                await notificationService.createMessage({
-                    userId: user.id,
-                    title: 'Welcome to MaxHub!',
-                    content: 'We are thrilled to have you here. You can now start buying data at the best rates in Ghana.',
-                    sender: 'System Admin'
-                });
+                    await notificationService.createMessage({
+                        userId: user.id,
+                        title: 'Welcome to MaxHub!',
+                        content: 'We are thrilled to have you here. You can now start buying data at the best rates in Ghana.',
+                        sender: 'System Admin'
+                    });
 
-                await notificationService.createNotification({
-                    userId: user.id,
-                    title: 'Account Created',
-                    message: 'Your account has been successfully created via Google. Welcome aboard!',
-                    type: 'success'
-                });
+                    await notificationService.createNotification({
+                        userId: user.id,
+                        title: 'Account Created',
+                        message: 'Your account has been successfully created via Google. Welcome aboard!',
+                        type: 'success'
+                    });
+                } catch (actError) {
+                    console.error('Non-fatal notification or activity logging error:', actError);
+                }
             } else {
                 // If user is blocked, deny login
                 if (user.is_blocked) {
@@ -239,19 +294,27 @@ const authController = {
                 }
 
                 // Update profiles last_login
-                await db.query(
-                    'INSERT INTO profiles (id, avatar_url, last_login) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET last_login = NOW(), avatar_url = COALESCE(profiles.avatar_url, EXCLUDED.avatar_url)',
-                    [user.id, avatarUrl]
-                );
+                try {
+                    await db.query(
+                        'INSERT INTO profiles (id, avatar_url, last_login) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET last_login = NOW(), avatar_url = COALESCE(profiles.avatar_url, EXCLUDED.avatar_url)',
+                        [user.id, avatarUrl]
+                    );
+                } catch (dbError) {
+                    console.error('Database profile update failed:', dbError);
+                }
 
-                logActivity({
-                    userId: user.id,
-                    type: 'auth',
-                    level: 'success',
-                    action: 'User Google Login',
-                    message: `User logged in via Google: ${email}`,
-                    req
-                });
+                try {
+                    logActivity({
+                        userId: user.id,
+                        type: 'auth',
+                        level: 'success',
+                        action: 'User Google Login',
+                        message: `User logged in via Google: ${email}`,
+                        req
+                    });
+                } catch (actError) {
+                    console.error('Non-fatal login activity logging error:', actError);
+                }
             }
 
             const token = jwt.sign(
@@ -272,8 +335,8 @@ const authController = {
                 }
             });
         } catch (error) {
-            console.error('Google login error:', error);
-            res.status(500).json({ message: 'Google login failed', error: error.message });
+            console.error('Google login general error:', error);
+            res.status(500).json({ message: 'Google login failed with general internal error', error: error.message });
         }
     }
 };
