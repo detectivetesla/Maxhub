@@ -157,7 +157,7 @@ const AdminNetworksPage: React.FC = () => {
                             <Server className="w-10 h-10 text-indigo-500" />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white">Portal-02 API</h3>
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white">{providerHealth?.provider || 'API Gateway'}</h3>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Data Fulfillment Gateway</p>
                         </div>
                     </div>

@@ -16,6 +16,11 @@ const AdminSettingsPage: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+    // Supplier Configuration States
+    const [providerType, setProviderType] = useState('portal02');
+    const [providerApiUrl, setProviderApiUrl] = useState('https://www.portal-02.com/api/v1');
+    const [providerApiKey, setProviderApiKey] = useState('');
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -26,10 +31,34 @@ const AdminSettingsPage: React.FC = () => {
             const settings = response.data.settings;
             setMaintenance(settings.maintenance_mode === 'true');
             setPublicRegistration(settings.public_registration === 'true');
+
+            // Fetch supplier configs
+            setProviderType(settings.provider_type || 'portal02');
+            setProviderApiUrl(settings.provider_api_url || 'https://www.portal-02.com/api/v1');
+            setProviderApiKey(settings.provider_api_key || '');
         } catch (error) {
             console.error('Failed to fetch settings', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSaveProviderConfig = async () => {
+        setSaving(true);
+        setMessage(null);
+        try {
+            await Promise.all([
+                api.post('/admin/settings', { key: 'provider_type', value: providerType }),
+                api.post('/admin/settings', { key: 'provider_api_url', value: providerApiUrl }),
+                api.post('/admin/settings', { key: 'provider_api_key', value: providerApiKey })
+            ]);
+            setMessage({ type: 'success', text: 'Upstream supplier configuration saved successfully!' });
+            setTimeout(() => setMessage(null), 3000);
+        } catch (error) {
+            console.error('Failed to save provider config', error);
+            setMessage({ type: 'error', text: 'Failed to save supplier configuration.' });
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -222,6 +251,80 @@ const AdminSettingsPage: React.FC = () => {
                             >
                                 <Save className="w-5 h-5 text-primary" />
                                 <span>{saving ? 'Synchronizing...' : 'Refresh State'}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Upstream Supplier API Configuration */}
+                    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-6 sm:space-y-8 shadow-sm">
+                        <div>
+                            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+                                <span>Upstream Data Supplier</span>
+                                <div className="px-2 py-0.5 rounded bg-blue-500/10 text-[10px] uppercase font-black text-blue-500 tracking-widest border border-blue-500/20">Active Gateway</div>
+                            </h2>
+                            <p className="text-sm font-bold text-slate-500 mt-1">Configure where MaxHub sources its data plans from.</p>
+                        </div>
+
+                        {loading ? (
+                            <div className="space-y-4 animate-pulse">
+                                <div className="h-12 bg-slate-100 dark:bg-white/5 rounded-2xl" />
+                                <div className="h-12 bg-slate-100 dark:bg-white/5 rounded-2xl" />
+                                <div className="h-20 bg-slate-100 dark:bg-white/5 rounded-2xl" />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Active Upstream Provider</label>
+                                    <select
+                                        value={providerType}
+                                        onChange={(e) => {
+                                            const type = e.target.value;
+                                            setProviderType(type);
+                                            if (type === 'bytebeacon') {
+                                                setProviderApiUrl('https://bytebeacon.online/api/v1');
+                                            } else {
+                                                setProviderApiUrl('https://www.portal-02.com/api/v1');
+                                            }
+                                        }}
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold text-slate-900 dark:text-white cursor-pointer"
+                                    >
+                                        <option value="portal02">Portal-02 API Gateway</option>
+                                        <option value="bytebeacon">ByteBeacon.online API Gateway</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">API Base URL</label>
+                                    <input
+                                        type="text"
+                                        value={providerApiUrl}
+                                        onChange={(e) => setProviderApiUrl(e.target.value)}
+                                        placeholder="https://bytebeacon.online/api/v1"
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold text-slate-900 dark:text-white"
+                                    />
+                                </div>
+
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Supplier API key (Secret Token)</label>
+                                    <input
+                                        type="password"
+                                        value={providerApiKey}
+                                        onChange={(e) => setProviderApiKey(e.target.value)}
+                                        placeholder="Starts with dk_ or your gateway key..."
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-transparent focus:border-slate-900 dark:focus:border-white/20 outline-none transition-all font-bold text-slate-900 dark:text-white font-mono"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="pt-6 border-t border-slate-100 dark:border-white/5">
+                            <button
+                                onClick={handleSaveProviderConfig}
+                                disabled={saving || loading}
+                                className="flex items-center gap-3 px-10 py-5 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-black/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                            >
+                                <Save className="w-5 h-5 text-primary" />
+                                <span>{saving ? 'Saving Gateway...' : 'Save Gateway Config'}</span>
                             </button>
                         </div>
                     </div>

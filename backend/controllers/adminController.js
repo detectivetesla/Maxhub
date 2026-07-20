@@ -487,12 +487,17 @@ const adminController = {
             res.status(500).json({ message: 'Failed to fetch networks', error: error.message });
         }
     },
-
     getProviderHealth: async (req, res) => {
         try {
             const balanceData = await portal02Service.checkBalance();
+            
+            // Get active provider type
+            const typeResult = await db.query("SELECT value FROM settings WHERE key = 'provider_type'");
+            const providerType = typeResult.rows[0]?.value || 'portal02';
+            const providerName = providerType === 'bytebeacon' ? 'ByteBeacon' : 'Portal-02';
+
             res.json({
-                provider: 'Portal-02',
+                provider: providerName,
                 status: balanceData.success ? 'online' : 'offline',
                 balance: balanceData.balance,
                 currency: balanceData.currency,
