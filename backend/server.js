@@ -71,15 +71,12 @@ if (process.env.NODE_ENV !== 'production') {
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
 
-        // Start background services
+        // Start background services (only in local dev — Vercel is serverless)
         const { startBackgroundJobs } = require('./services/backgroundJobs');
         startBackgroundJobs();
     });
-} else {
-    // In production (Vercel), we might need a different strategy for background jobs
-    // but we'll initialize them here for standard node environments
-    const { startBackgroundJobs } = require('./services/backgroundJobs');
-    startBackgroundJobs();
 }
+// In production (Vercel), the app is exported as a serverless function.
+// Background jobs with setInterval cannot run on serverless — use Vercel Cron or an external service.
 
 module.exports = app;
