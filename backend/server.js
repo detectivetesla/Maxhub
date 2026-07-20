@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
+// Build v2.1 — Dynamic Supplier Gateway (ByteBeacon/Portal-02)
 
 // Load environment variables early
 require('dotenv').config({ path: path.join(__dirname, '.env') });
